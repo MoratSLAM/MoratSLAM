@@ -16,6 +16,7 @@ bool ref_set = false;
 // Parâmetros de inicialização da referência
 const int N_INIT_SAMPLES = 500;  // número de amostras para média inicial
 const int SAT_THRESHOLD  = 10;  // exigência mínima de satélites
+const double MAX_STB_VARIATION = 0.000001;
 
 // Funções
 double degreesToRadians(double degrees);
@@ -88,7 +89,7 @@ void set_reference()
                     lon = gps.location.lng();
                     sats = gps.satellites.value();
 
-                    if (sats >= SAT_THRESHOLD)
+                    if (sats >= SAT_THRESHOLD && abs(lat - previus_lat) < MAX_STB_VARIATION && abs(lon - previus_lon) < MAX_STB_VARIATION)
                     {
                         lat_sum += lat;
                         lon_sum += lon;
@@ -100,7 +101,7 @@ void set_reference()
                         Serial.print(N_INIT_SAMPLES);
                         Serial.println(").");
 
-                        if (sample_count >= N_INIT_SAMPLES && sats >= SAT_THRESHOLD && abs(lat - previus_lat) < 0.000001 && abs(lon - previus_lon) < 0.0000001)
+                        if (sample_count >= N_INIT_SAMPLES)
                         {
                             ref_lat = lat_sum / sample_count;
                             ref_lon = lon_sum / sample_count;
@@ -111,15 +112,23 @@ void set_reference()
                             Serial.print("ref_lon = "); Serial.println(ref_lon, 8);
                             break; // sai do while GPS.available
                         }
-
-                        previus_lat = lat;
-                        previus_lon = lon;
                     }
                     else
                     {
-                        Serial.println("Leitura inicial rejeitada (satélites insuficientes): ");
+                        Serial.println("Leitura inicial rejeitada (satélites insuficientes ou variação maior do que esperada): ");
+                        Serial.print("Sats:");
                         Serial.println(sats);
+                        Serial.print("Variação Lat:");
+                        Serial.println(lat);
+                        Serial.print("Variação Lon:");
+                        Serial.println(lon);
+
+                        lat_sum = 0;
+                        lon_sum = 0;
+                        sample_count = 0;
                     }
+                    previus_lat = lat;
+                    previus_lon = lon;
                 }
             }
         }
