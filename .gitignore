@@ -1,0 +1,8 @@
+# Arquivos e pastas de compilação do ROS 2 (dentro de ros2_ws)
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+ros2_ws/data/
+
+# Configurações do ambiente de desenvolvimento (VS Code)
+.vscode/
