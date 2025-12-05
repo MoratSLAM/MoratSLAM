@@ -17,8 +17,9 @@ const int DIR_CENTER = 92;
 
 // ESC
 const int ESC_MIN = 65;
-const int ESC_MAX = 450;
+const int ESC_MAX = 80;
 const int ESC_STOP = 0;
+bool ESC_FLAG = false;
 
 // Freio
 const int BRK_ON  = 41;
@@ -49,6 +50,8 @@ GamepadPtr myGamepad;
 void onConnectedGamepad(GamepadPtr gp) {
     myGamepad = gp;
     Serial.println("Controle conectado!");
+    myGamepad->setColorLED(0, 255, 0);
+    
 }
 
 void onDisconnectedGamepad(GamepadPtr gp) {
@@ -56,6 +59,7 @@ void onDisconnectedGamepad(GamepadPtr gp) {
         myGamepad = nullptr;
     }
     Serial.println("Controle desconectado");
+    EscMtr.write(ESC_STOP);
 }
 
 
@@ -72,7 +76,6 @@ void setup() {
     SrvGear.attach(18);
 
     // Valores iniciais
-    EscMtr.write(ESC_STOP);
     SrvDir.write(DIR_CENTER);
     SrvBrk.write(BRK_OFF);
     SrvGear.write(GEAR_FORWARD);
@@ -110,17 +113,19 @@ void loop() {
         SrvDir.write(dirValue);
 
         // ================================
-        // 2) ACELERAÇÃO — R2
+        // 2) ACELERAÇÃO — ANALÓGICO DIREITO
         // ================================
-        // gp->throttle / brake variam de 0 a 1023 nos gatilhos
-        int r2 = myGamepad->throttle();
+        // gp->axisRY vai de -511 (baixo) a 511 (cima)
+        int ry = myGamepad->axisRY();
 
-        if (r2 < 20) {
-            // Gatilho solto → motor parado
+        if (ry > -20) {
+            // Analogico solto → motor parado
             EscMtr.write(ESC_STOP);
         } else {
-            int escValue = map(r2, 0, 1023, ESC_MIN, ESC_MAX);
-            EscMtr.write(escValue);
+            int escValue = map(ry, 0, -508, ESC_MIN, ESC_MAX);
+            if(!brakeEnabled){
+                EscMtr.write(escValue);
+            }
         }
 
         // ================================
@@ -131,10 +136,16 @@ void loop() {
 
         if (l2Pressed && !lastL2) {
             brakeEnabled = !brakeEnabled;
-            if (brakeEnabled)
+            if (brakeEnabled){
+                EscMtr.write(ESC_STOP);
                 SrvBrk.write(BRK_ON);
-            else
+                myGamepad->setColorLED(255, 0, 0);
+                myGamepad->playDualRumble(0, 250, 0x80,0x40);
+            }
+            else{
                 SrvBrk.write(BRK_OFF);
+                myGamepad->setColorLED(0, 255, 0);
+            }
         }
         lastL2 = l2Pressed;
 
@@ -145,13 +156,39 @@ void loop() {
 
         if (r1Pressed && !lastR1) {
             gearForward = !gearForward;
-            if (gearForward)
+            if (gearForward){
                 SrvGear.write(GEAR_FORWARD);
-            else
+            }
+            else{
                 SrvGear.write(GEAR_REVERSE);
+            }
         }
         lastR1 = r1Pressed;
 
+        // ================================
+        // 5) BOTÃO OPTIONS — AÇÃO ESPECIAL
+        // ================================
+        uint16_t psPressed = myGamepad->miscButtons();
+
+        if (psPressed == 0x04 && ESC_FLAG == false) {
+            configESC();
+            psPressed == 0x00;
+        } 
+        else if (psPressed == 0x04 && ESC_FLAG == true){
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+            myGamepad->setColorLED(255, 0, 0);
+            delay(500);
+            myGamepad->setColorLED(0, 255, 0);
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+            delay(500);
+            myGamepad->setColorLED(255, 0, 0);
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+            delay(500);
+            myGamepad->setColorLED(0, 255, 0);
+            psPressed == 0x00;
+        }
+
+        
         /*
         // ===========================================================
         // DEBUG PRINT — PRINTA TUDO NO FIM DO LOOP
@@ -184,5 +221,27 @@ void loop() {
         */
     }
 
-    delay(150);  // ajustável
+    delay(10);  // ajustável
+}
+
+void configESC()
+{
+  // Início da configuração do ESC
+  myGamepad->setColorLED(0, 0, 255);
+
+  EscMtr.write(450);
+  // Aguarda 35,8 segundos para chegar ao modo default do ESC
+  delay(35800);
+  
+  // Descida de valores até 0 para configurar o ESC
+  for (int i = 450; i >= 0; i--)
+  { 
+    EscMtr.write(i);
+    delay(5);
+  }
+  delay(5000);
+
+  // Fim da configuração do ESC
+  myGamepad->setColorLED(0, 255, 0);
+  ESC_FLAG = true;
 }
