@@ -8,11 +8,11 @@
 void MPU6050_Config();
 void MPU6050_Read();
 void MPU6050_boot();
-void MPU6050_ReadRaw();
 
 // Variáveis úteis
 extern float yaw;
 extern int16_t ax, ay, az;
 extern int16_t gx, gy, gz;
+extern Quaternion q;
 
 #endif

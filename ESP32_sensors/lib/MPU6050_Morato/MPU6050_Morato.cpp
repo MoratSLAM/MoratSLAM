@@ -28,6 +28,12 @@ float ypr[3], yaw;           // [yaw, pitch, roll]   yaw/pitch/roll container an
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
+VectorInt16 aa;      // aceleração bruta
+VectorInt16 aaReal;  // aceleração linear sem gravidade
+
+float velX = 0, velY = 0, velZ = 0;
+
+
 
 void MPU6050_Config() {
 
@@ -73,7 +79,7 @@ void MPU6050_boot(){
     } 
 }
 
-void MPU6050_Read() {
+/*void MPU6050_Read() {
      // if programming failed, don't try to do anything
     if (!dmpReady) return;
     // read a packet from FIFO
@@ -81,6 +87,10 @@ void MPU6050_Read() {
 
 
         #ifdef OUTPUT_READABLE_YAWPITCHROLL
+            
+            mpu.getAcceleration(&ax, &ay, &az);
+            mpu.dmpGetLinearAccel(&ax, &ay, &az);
+            mpu.getRotation(&gx, &gy, &gz);
             mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
@@ -89,9 +99,49 @@ void MPU6050_Read() {
         #endif
     }
 }
+*/
+void MPU6050_Read() {
+    if (!dmpReady) return;
 
-void MPU6050_ReadRaw() {
-    // Read raw datas
-    mpu.getAcceleration(&ax, &ay, &az);
-    mpu.getRotation(&gx, &gy, &gz);
+    if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
+
+        #ifdef OUTPUT_READABLE_YAWPITCHROLL
+
+            // Quaternion e gravidade
+            mpu.dmpGetQuaternion(&q, fifoBuffer);
+            mpu.dmpGetGravity(&gravity, &q);
+            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+            yaw = ypr[0] * 180.0f / M_PI;
+
+            // Leitura das acelerações brutas
+            mpu.getAcceleration(&ax, &ay, &az);
+
+            // Colocar aceleração bruta em aa
+            aa.x = ax;
+            aa.y = ay;
+            aa.z = az;
+
+            // Aceleração linear (remove gravidade usando DMP)
+            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+
+            // Converte aceleração linear para m/s²
+            float accX = (float)aaReal.x / 16384.0f * 9.80665f;
+            float accY = (float)aaReal.y / 16384.0f * 9.80665f;
+            float accZ = (float)aaReal.z / 16384.0f * 9.80665f;
+
+            // Integração simples para velocidade
+            static unsigned long lastTime = micros();
+            unsigned long now = micros();
+            float dt = (now - lastTime) / 1000000.0f;
+            lastTime = now;
+
+            velX += accX * dt;
+            velY += accY * dt;
+            velZ += accZ * dt;
+
+            // OPTIONAL: leitura do giroscópio bruto (sem uso aqui)
+            mpu.getRotation(&gx, &gy, &gz);
+
+        #endif
+    }
 }
