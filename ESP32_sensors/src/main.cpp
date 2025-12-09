@@ -60,14 +60,14 @@ void odom_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     odom_msg.pose.pose.orientation.w = q.w;
 
     // Linear velocity
-    odom_msg.twist.twist.linear.x = ;
-    odom_msg.twist.twist.linear.y = 0.1;
-    odom_msg.twist.twist.linear.z = 0.1;
+    odom_msg.twist.twist.linear.x = velX;
+    odom_msg.twist.twist.linear.y = velY;
+    odom_msg.twist.twist.linear.z = velZ;
 
     // Angular velocities
-    odom_msg.twist.twist.angular.x = 0.01;
-    odom_msg.twist.twist.angular.y = 0.01;
-    odom_msg.twist.twist.angular.z = 0.01;
+    odom_msg.twist.twist.angular.x = gyro.x;
+    odom_msg.twist.twist.angular.y = gyro.y;
+    odom_msg.twist.twist.angular.z = gyro.z;
 
     // Publish the odometry message
     RCSOFTCHECK(rcl_publish(&odom_pub, &odom_msg, NULL));

@@ -53,7 +53,7 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup
+CMAKE_SOURCE_DIR = /home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup
@@ -78,6 +78,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 

@@ -11,8 +11,10 @@ void MPU6050_boot();
 
 // Variáveis úteis
 extern float yaw;
-extern int16_t ax, ay, az;
-extern int16_t gx, gy, gz;
+extern VectorInt16 gyro;
 extern Quaternion q;
+extern float velX;
+extern float velY;
+extern float velZ;
 
 #endif

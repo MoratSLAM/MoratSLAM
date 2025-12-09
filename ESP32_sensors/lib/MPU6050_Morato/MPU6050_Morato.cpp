@@ -22,16 +22,16 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 Quaternion q;           // [w, x, y, z]         quaternion container
 VectorFloat gravity;    // [x, y, z]            gravity vector
 float ypr[3], yaw;           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+VectorInt16 gyro;
 
-
-// raw sensor measurements
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
 
 VectorInt16 aa;      // aceleração bruta
 VectorInt16 aaReal;  // aceleração linear sem gravidade
+VectorInt16 aaWorld;  // aceleração linear no mundo
 
-float velX = 0, velY = 0, velZ = 0;
+float velX = 0;
+float velY = 0;
+float velZ = 0;
 
 
 
@@ -89,7 +89,6 @@ void MPU6050_boot(){
         #ifdef OUTPUT_READABLE_YAWPITCHROLL
             
             mpu.getAcceleration(&ax, &ay, &az);
-            mpu.dmpGetLinearAccel(&ax, &ay, &az);
             mpu.getRotation(&gx, &gy, &gz);
             mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
@@ -100,48 +99,40 @@ void MPU6050_boot(){
     }
 }
 */
+
+
+// Função atualizada com todos os dados da imu, inclusive a velocidade liear por meio do metodo de integração numerica
 void MPU6050_Read() {
     if (!dmpReady) return;
 
     if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
 
-        #ifdef OUTPUT_READABLE_YAWPITCHROLL
+        mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+        yaw = ypr[0] * 180.0f / M_PI;
 
-            // Quaternion e gravidade
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            yaw = ypr[0] * 180.0f / M_PI;
+        // aceleração bruta
+        mpu.dmpGetAccel(&aa, fifoBuffer);
 
-            // Leitura das acelerações brutas
-            mpu.getAcceleration(&ax, &ay, &az);
+        // aceleração linear (sem gravidade)
+        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
 
-            // Colocar aceleração bruta em aa
-            aa.x = ax;
-            aa.y = ay;
-            aa.z = az;
+        // aceleração linear no mundo (correto p/ integração)
+        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
 
-            // Aceleração linear (remove gravidade usando DMP)
-            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+        // conversão para m/s²
+        float accX = (float)aaWorld.x / 16384.0f * 9.80665f;
+        float accY = (float)aaWorld.y / 16384.0f * 9.80665f;
+        float accZ = (float)aaWorld.z / 16384.0f * 9.80665f;
 
-            // Converte aceleração linear para m/s²
-            float accX = (float)aaReal.x / 16384.0f * 9.80665f;
-            float accY = (float)aaReal.y / 16384.0f * 9.80665f;
-            float accZ = (float)aaReal.z / 16384.0f * 9.80665f;
+        // usa período real do DMP (100Hz = 0.01s)
+        const float dt = 0.01f;
 
-            // Integração simples para velocidade
-            static unsigned long lastTime = micros();
-            unsigned long now = micros();
-            float dt = (now - lastTime) / 1000000.0f;
-            lastTime = now;
+        velX += accX * dt;
+        velY += accY * dt;
+        velZ += accZ * dt;
 
-            velX += accX * dt;
-            velY += accY * dt;
-            velZ += accZ * dt;
-
-            // OPTIONAL: leitura do giroscópio bruto (sem uso aqui)
-            mpu.getRotation(&gx, &gy, &gz);
-
-        #endif
+        mpu.dmpGetGyro(&gyro, fifoBuffer);
     }
 }

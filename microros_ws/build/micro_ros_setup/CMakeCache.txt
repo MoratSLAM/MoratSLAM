@@ -338,7 +338,7 @@ micro_ros_setup_BINARY_DIR:STATIC=/home/iarley/Documents/tcc/ratslam/microros_ws
 micro_ros_setup_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-micro_ros_setup_SOURCE_DIR:STATIC=/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup
+micro_ros_setup_SOURCE_DIR:STATIC=/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup
 
 //Path to a program.
 xmllint_BIN:FILEPATH=/usr/bin/xmllint
@@ -428,7 +428,7 @@ CMAKE_GENERATOR_PLATFORM:INTERNAL=
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
 //Source directory with the top level CMakeLists.txt file for this
 // project
-CMAKE_HOME_DIRECTORY:INTERNAL=/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup
+CMAKE_HOME_DIRECTORY:INTERNAL=/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup
 //Install .so files without execute permission.
 CMAKE_INSTALL_SO_NO_EXE:INTERNAL=1
 //ADVANCED property for variable: CMAKE_LINKER

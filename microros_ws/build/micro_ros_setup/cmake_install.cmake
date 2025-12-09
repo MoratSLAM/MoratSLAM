@@ -1,4 +1,4 @@
-# Install script for directory: /home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup
+# Install script for directory: /home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -98,25 +98,25 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/micro_ros_setup" TYPE FILE FILES "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/micro_ros_setup" TYPE FILE FILES "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/package.xml")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE DIRECTORY FILES "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/config" USE_SOURCE_PERMISSIONS)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE DIRECTORY FILES "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/config" USE_SOURCE_PERMISSIONS)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/micro_ros_setup" TYPE PROGRAM FILES
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/create_ws.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/create_agent_ws.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/create_firmware_ws.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/configure_firmware.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/flash_firmware.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/build_firmware.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/build_agent.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/yaml_filter.py"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/clean_env.sh"
-    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup/scripts/component"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/create_ws.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/create_agent_ws.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/create_firmware_ws.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/configure_firmware.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/flash_firmware.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/build_firmware.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/build_agent.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/yaml_filter.py"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/clean_env.sh"
+    "/home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup/scripts/component"
     )
 endif()
 

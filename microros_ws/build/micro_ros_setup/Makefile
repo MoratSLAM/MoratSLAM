@@ -57,7 +57,7 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/iarley/Documents/tcc/ratslam/microros_ws/src/src/micro_ros_setup
+CMAKE_SOURCE_DIR = /home/iarley/Documents/tcc/ratslam/microros_ws/src/micro_ros_setup
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/iarley/Documents/tcc/ratslam/microros_ws/build/micro_ros_setup
