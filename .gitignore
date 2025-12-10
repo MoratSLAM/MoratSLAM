@@ -2,8 +2,9 @@ ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
 ros2_ws/data/
-
 microros_ws/build/
 microros_ws/install/
 microros_ws/log/
+microros_ws/src/uros
+microros_ws/ros2.repos
 .vscode/
