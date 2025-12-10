@@ -30,7 +30,6 @@ rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t odom_timer;
 
-
 HardwareSerial GPS_Serial(2);
 GPSLocalization gpsLoc(GPS_Serial, 115200, 16, 17);
 
@@ -93,7 +92,7 @@ void setup()
   MPU6050_Config();
 
   // Initialize GPS
-  gpsLoc.setReference(3, 0.00001, 50);
+  //gpsLoc.setReference(3, 0.00001, 50);
 
   digitalWrite(2, LOW);
 }
@@ -114,12 +113,13 @@ void error_loop()
     digitalWrite(2, HIGH);
     delay(1000);
     digitalWrite(2, LOW);
+    delay(1000);
   }
 }
 
 // ODOMETRY CALLBACK 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
-{
+{   
     RCLC_UNUSED(last_call_time);
     if (timer == NULL) return;
 
