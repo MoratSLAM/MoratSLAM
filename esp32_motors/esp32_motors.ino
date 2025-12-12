@@ -14,11 +14,13 @@ Servo SrvGear;   // marcha
 const int DIR_LEFT  = 41;
 const int DIR_RIGHT = 141;
 const int DIR_CENTER = 92;
+int dirOffset = 0;     // Ajuste fino da direção (positivo=>direita / negativo=>esquerda)
+const int DIR_OFFSET_STEP = 1;   // tamanho do passo por clique
 
 // ESC
 const int ESC_MIN = 65;
 const int ESC_MAX = 80;
-const int ESC_STOP = 0;
+const int ESC_STOP = 20;
 bool ESC_FLAG = false;
 
 // Freio
@@ -36,13 +38,16 @@ const int GEAR_FORWARD = 200;
 bool brakeEnabled = false;
 bool gearForward = true;
 
-// Para toggle (evitar repetir várias vezes no mesmo clique)
-bool lastL2 = false;
+bool lastL1 = false;
 bool lastR1 = false;
+
+bool accelEnabled = false;
+bool lastX = false;
 
 // Ponteiro para o controle
 GamepadPtr myGamepad;
 
+int escValue = 0;
 
 // ======================================================
 // BLUEPAD — CALLBACKS
@@ -93,7 +98,7 @@ void setup() {
 }
 
 
-// ======================================================
+// ======================================================+
 // FUNÇÃO PRINCIPAL DO LOOP
 // ======================================================
 void loop() {
@@ -109,45 +114,66 @@ void loop() {
         int lx = myGamepad->axisX();  
 
         // Mapeamento: -511 → DIR_LEFT, +511 → DIR_RIGHT
-        int dirValue = map(lx, -511, 511, DIR_LEFT, DIR_RIGHT);
+        int dirValue = map(lx, -511, 511, DIR_LEFT, DIR_RIGHT) + dirOffset;
+        dirValue = constrain(dirValue, DIR_LEFT, DIR_RIGHT);  // Garante que o valor fique sempre dentro do limite do servo
         SrvDir.write(dirValue);
 
         // ================================
-        // 2) ACELERAÇÃO — ANALÓGICO DIREITO
+        // 2) ACELERAÇÃO — BOTÃO X (toggle)
         // ================================
-        // gp->axisRY vai de -511 (baixo) a 511 (cima)
-        int ry = myGamepad->axisRY();
+        bool xPressed = myGamepad->a(); 
 
-        if (ry > -20) {
-            // Analogico solto → motor parado
-            EscMtr.write(ESC_STOP);
-        } else {
-            int escValue = map(ry, 0, -508, ESC_MIN, ESC_MAX);
-            if(!brakeEnabled){
-                EscMtr.write(escValue);
+        if (xPressed && !lastX) {
+            accelEnabled = !accelEnabled;
+
+            if (accelEnabled) {
+                //
+                // ---- ACELERAR ----
+                //
+                SrvBrk.write(BRK_OFF);
+                delay(200);
+                EscMtr.write(ESC_MIN);
+                myGamepad->setColorLED(0, 0, 255);
             }
+            else {
+                //
+                // ---- PARAR ----
+                //
+                EscMtr.write(ESC_STOP);
+                delay(150);
+                SrvBrk.write(BRK_ON);
+                myGamepad->setColorLED(255, 0, 0);
+                delay(200);
+            }
+        }
+        lastX = xPressed;
+
+        // Segurança: se freio do L1 estiver ativo, motor sempre para
+        if (brakeEnabled) {
+            EscMtr.write(ESC_STOP);
+            SrvBrk.write(BRK_ON);
         }
 
         // ================================
-        // 3) FREIO — L2 toggle
+        // 3) FREIO — L1 toggle
         // ================================
-        int l2 = myGamepad->brake();
-        bool l2Pressed = l2 > 200;
+        bool l1Pressed = myGamepad->l1();
 
-        if (l2Pressed && !lastL2) {
+        if (l1Pressed && !lastL1) {
             brakeEnabled = !brakeEnabled;
-            if (brakeEnabled){
+            if (brakeEnabled) {
                 EscMtr.write(ESC_STOP);
+                delay(100);
                 SrvBrk.write(BRK_ON);
                 myGamepad->setColorLED(255, 0, 0);
-                myGamepad->playDualRumble(0, 250, 0x80,0x40);
+                myGamepad->playDualRumble(0, 250, 0x80, 0x40);
             }
-            else{
+            else {
                 SrvBrk.write(BRK_OFF);
                 myGamepad->setColorLED(0, 255, 0);
             }
         }
-        lastL2 = l2Pressed;
+        lastL1 = l1Pressed;
 
         // ================================
         // 4) MARCHA — R1 toggle
@@ -188,7 +214,34 @@ void loop() {
             psPressed == 0x00;
         }
 
-        
+        // ================================
+        // AJUSTE FINO DA DIREÇÃO — SETAS
+        // ================================
+        uint16_t dpad  = myGamepad->dpad();
+ 
+        if (dpad == 0x08) {
+            dirOffset -= DIR_OFFSET_STEP;
+            myGamepad->setColorLED(255, 150, 0);     // LED laranja ao ajustar
+            delay(200);  // evita repetir muito rápido
+            myGamepad->setColorLED(0, 255, 0);
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+        }
+
+        if (dpad == 0x04) {
+            dirOffset += DIR_OFFSET_STEP;
+            myGamepad->setColorLED(0, 150, 255);     // LED azul-claro ao ajustar
+            delay(200); // evita repetir muito rápido
+            myGamepad->setColorLED(0, 255, 0);
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+        }
+
+        if (dpad == 0x02) {
+            dirOffset = 0;
+            myGamepad->setColorLED(255, 0, 0);     // LED azul-claro ao ajustar
+            delay(200); // evita repetir muito rápido
+            myGamepad->setColorLED(0, 255, 0);
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+        }
         /*
         // ===========================================================
         // DEBUG PRINT — PRINTA TUDO NO FIM DO LOOP
@@ -197,25 +250,15 @@ void loop() {
         Serial.println("ESTADO DO CONTROLE PS4");
         Serial.println("-------------------------------------------------");
 
-        Serial.printf("LX (direcao): %d  -> servo = %d\n", lx, dirValue);
-
-        Serial.printf("R2 (aceleracao): %d  -> ESC = %d\n", r2, escValue);
-
-        Serial.printf("L2 (freio): %d  -> estado = %s\n",
-                      l2,
-                      brakeEnabled ? "FREANDO" : "SOLTO");
-
-        Serial.printf("R1 (marcha): %s\n",
-                      gearForward ? "FRENTE" : "RÉ");
 
         Serial.println("-------------------------------------------------");
-        Serial.printf("Botoes: X=%d  O=%d  R1=%d  L1=%d  R2=%d  L2=%d\n",
+        Serial.printf("Botoes: X=%d  O=%d  R1=%d  L1=%d  R2=%d dpad=%d\n",
                       myGamepad->a(),
                       myGamepad->b(),
                       myGamepad->r1(),
                       myGamepad->l1(),
                       myGamepad->throttle(),
-                      myGamepad->brake());
+                      myGamepad->dpad());
 
         Serial.println("=================================================\n");
         */
