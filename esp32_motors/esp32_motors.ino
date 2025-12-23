@@ -21,7 +21,6 @@ const int DIR_OFFSET_STEP = 1;   // tamanho do passo por clique
 const int ESC_MIN = 65;
 const int ESC_MAX = 80;
 const int ESC_STOP = 20;
-bool ESC_FLAG = false;
 
 // Freio
 const int BRK_ON  = 41;
@@ -191,28 +190,6 @@ void loop() {
         }
         lastR1 = r1Pressed;
 
-        // ================================
-        // 5) BOTÃO OPTIONS — AÇÃO ESPECIAL
-        // ================================
-        uint16_t psPressed = myGamepad->miscButtons();
-
-        if (psPressed == 0x04 && ESC_FLAG == false) {
-            configESC();
-            psPressed == 0x00;
-        } 
-        else if (psPressed == 0x04 && ESC_FLAG == true){
-            myGamepad->playDualRumble(0, 250, 0x80,0x40);
-            myGamepad->setColorLED(255, 0, 0);
-            delay(500);
-            myGamepad->setColorLED(0, 255, 0);
-            myGamepad->playDualRumble(0, 250, 0x80,0x40);
-            delay(500);
-            myGamepad->setColorLED(255, 0, 0);
-            myGamepad->playDualRumble(0, 250, 0x80,0x40);
-            delay(500);
-            myGamepad->setColorLED(0, 255, 0);
-            psPressed == 0x00;
-        }
 
         // ================================
         // AJUSTE FINO DA DIREÇÃO — SETAS
@@ -265,26 +242,4 @@ void loop() {
     }
 
     delay(10);  // ajustável
-}
-
-void configESC()
-{
-  // Início da configuração do ESC
-  myGamepad->setColorLED(0, 0, 255);
-
-  EscMtr.write(450);
-  // Aguarda 35,8 segundos para chegar ao modo default do ESC
-  delay(35800);
-  
-  // Descida de valores até 0 para configurar o ESC
-  for (int i = 450; i >= 0; i--)
-  { 
-    EscMtr.write(i);
-    delay(5);
-  }
-  delay(5000);
-
-  // Fim da configuração do ESC
-  myGamepad->setColorLED(0, 255, 0);
-  ESC_FLAG = true;
 }
