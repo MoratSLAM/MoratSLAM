@@ -14,6 +14,13 @@
 
 #include <TINY_GPS.h>
 
+#include <WiFi.h>
+
+const char* ssid     = "morato";
+const char* password = "mor@to123";
+IPAddress agent_ip(192, 168, 137, 155);
+uint16_t agent_port = 8888;
+
 // GLOBALS
 rcl_publisher_t odom_pub;
 nav_msgs__msg__Odometry odom_msg;
@@ -45,6 +52,8 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
 // SETUP
 void setup()
 {
+  //set_microros_wifi_transports((char *)ssid, (char *)password, agent_ip, agent_port);
+
   pinMode(2, OUTPUT);
   digitalWrite(2, HIGH);
 
@@ -73,13 +82,13 @@ void setup()
   rosidl_runtime_c__String__assign(&odom_msg.child_frame_id, "base_link");
 
   // Create odometry publisher
-  RCCHECK(rclc_publisher_init_default(&odom_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "odom"));
+  RCCHECK(rclc_publisher_init_default(&odom_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "irat_red/odom"));
 
   // Create gps publisher
   RCCHECK(rclc_publisher_init_default(&gps_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), "gps"));
 
   // Create point publisher
-  RCCHECK(rclc_publisher_init_default(&gps_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Point), "point"));
+  RCCHECK(rclc_publisher_init_default(&point_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Point), "point"));
 
   // Create timer callback (10 ms)
   RCCHECK(rclc_timer_init_default(&odom_timer, &support, RCL_MS_TO_NS(10), timer_callback));
@@ -92,7 +101,7 @@ void setup()
   MPU6050_Config();
 
   // Initialize GPS
-  //gpsLoc.setReference(3, 0.00001, 50);
+  gpsLoc.setReference(10, 0.00001, 50);
 
   digitalWrite(2, LOW);
 }
@@ -175,6 +184,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     gpsLoc.getXY(x, y);
     point_msg.x = (float)x;
     point_msg.y = (float)y;
+    point_msg.z = (float)gpsLoc.getSatellites();
     
     // Publish the point message
     RCSOFTCHECK(rcl_publish(&point_pub, &point_msg, NULL));

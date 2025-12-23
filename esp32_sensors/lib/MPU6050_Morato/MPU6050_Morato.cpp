@@ -24,7 +24,6 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float ypr[3], yaw;           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 VectorInt16 gyro;
 
-
 VectorInt16 aa;      // aceleração bruta
 VectorInt16 aaReal;  // aceleração linear sem gravidade
 VectorInt16 aaWorld;  // aceleração linear no mundo
@@ -33,6 +32,9 @@ float velX = 0;
 float velY = 0;
 float velZ = 0;
 
+const float VEL_MAX = 1.4f;  // m/s
+
+static uint32_t lastMicros = micros();
 
 
 void MPU6050_Config() {
@@ -77,6 +79,7 @@ void MPU6050_boot(){
         // get expected DMP packet size for later comparison
         packetSize = mpu.dmpGetFIFOPacketSize();
     } 
+    mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
 }
 
 /*void MPU6050_Read() {
@@ -107,32 +110,32 @@ void MPU6050_Read() {
 
     if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
 
+        // dt real
+        uint32_t now = micros();
+        float dt = (now - lastMicros) / 1e6f;
+        lastMicros = now;
+
         mpu.dmpGetQuaternion(&q, fifoBuffer);
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
         yaw = ypr[0] * 180.0f / M_PI;
 
-        // aceleração bruta
+        mpu.dmpGetGyro(&gyro, fifoBuffer);
         mpu.dmpGetAccel(&aa, fifoBuffer);
 
-        // aceleração linear (sem gravidade)
-        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+        // aceleração em m/s² no MUNDO
+        float accX = (aa.x / 16384.0f) * 9.80665f;
+        float accY = (aa.y / 16384.0f) * 9.80665f;
+        float accZ = (aa.z / 16384.0f) * 9.80665f;
 
-        // aceleração linear no mundo (correto p/ integração)
-        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-
-        // conversão para m/s²
-        float accX = (float)aaWorld.x / 16384.0f * 9.80665f;
-        float accY = (float)aaWorld.y / 16384.0f * 9.80665f;
-        float accZ = (float)aaWorld.z / 16384.0f * 9.80665f;
-
-        // usa período real do DMP (100Hz = 0.01s)
-        const float dt = 0.01f;
-
+        // integração acumulativa
         velX += accX * dt;
         velY += accY * dt;
         velZ += accZ * dt;
 
-        mpu.dmpGetGyro(&gyro, fifoBuffer);
+        // --- saturação vetorial ---
+        velX = constrain(velX, 0, VEL_MAX);
+        velY = constrain(velY, 0, VEL_MAX);
+        velZ = constrain(velZ, 0, VEL_MAX);
     }
 }
