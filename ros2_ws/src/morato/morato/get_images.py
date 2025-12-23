@@ -6,13 +6,14 @@ from sensor_msgs.msg import CompressedImage
 class GetImages(Node):
     def __init__(self):
         super().__init__("get_images")
-        self.pub = self.create_publisher(CompressedImage, "camera/image/compressed", 10)
+        self.pub = self.create_publisher(CompressedImage, "/irat_red/camera/image/compressed", 10)
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(0.03, self.callback) # 0.03 = 33FPS
 
     def callback(self):
         ret, frame = self.cap.read()
         if not ret:
+            self.get_logger().error("Failed to read frame")
             return
 
         # Encodes image as JPG

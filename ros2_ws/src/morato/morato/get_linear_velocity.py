@@ -8,7 +8,7 @@ class GetLinearVelocity(Node):
         super().__init__('get_linear_velocity')
 
         # Subscriber para /odom
-        self.subscription = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        self.subscription = self.create_subscription(Odometry, 'irat_red/odom', self.odom_callback, 10)
 
         # Arquivo onde os dados serão gravados
         self.output_file = 'velocity_linear.txt'
@@ -23,12 +23,14 @@ class GetLinearVelocity(Node):
         # Monta a string
         line = f"{vx:.5f}, {vy:.5f}, {vz:.5f}\n"
 
+        '''
         # Salva no arquivo
         with open(self.output_file, 'a') as f:
-            f.write(line)
+            f.write(line)'''
 
         # Log simples
-        self.get_logger().info(f"Velocidade linear: {line.strip()}")
+        #self.get_logger().info(f"Velocidade linear: {line.strip()}")
+        print(f"Velocidade linear: {line.strip()}")
 
 
 def main(args=None):
