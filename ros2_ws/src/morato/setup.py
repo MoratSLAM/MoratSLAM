@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "get_linear_velocity = morato.get_linear_velocity:main",
+            "data_to_csv = morato.data_to_csv:main",
             "get_images = morato.get_images:main"
 
         ],
