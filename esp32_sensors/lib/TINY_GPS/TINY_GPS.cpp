@@ -1,14 +1,14 @@
 #include "TINY_GPS.h"
 #include <math.h>
 
-GPSLocalization::GPSLocalization(HardwareSerial &serialPort, uint32_t baudRate,
+GPS_localization::GPS_localization(HardwareSerial &serialPort, uint32_t baudRate,
                                    int rxPin, int txPin)
     : gpsSerial(serialPort), ref_lat(0.0), ref_lon(0.0), ref_ready(false)
 {
     gpsSerial.begin(baudRate, SERIAL_8N1, rxPin, txPin);
 }
 
-void GPSLocalization::update()
+void GPS_localization::update()
 {
     while (gpsSerial.available() > 0)
     {
@@ -16,22 +16,22 @@ void GPSLocalization::update()
     }
 }
 
-double GPSLocalization::getLatitude()
+double GPS_localization::get_latitude()
 {
     return gps.location.isValid() ? gps.location.lat() : 0.0;
 }
 
-double GPSLocalization::getLongitude()
+double GPS_localization::get_longitude()
 {
     return gps.location.isValid() ? gps.location.lng() : 0.0;
 }
 
-int GPSLocalization::getSatellites()
+int GPS_localization::get_satellites()
 {
     return gps.satellites.value();
 }
 
-void GPSLocalization::setReference(int sat_threshold, double max_variation, int n_init_samples)
+void GPS_localization::set_reference(int sat_threshold, double max_variation, int n_init_samples)
 {
     double lat_sum = 0.0;
     double lon_sum = 0.0;
@@ -79,7 +79,7 @@ void GPSLocalization::setReference(int sat_threshold, double max_variation, int 
     }
 }
 
-void GPSLocalization::getXY(double &x, double &y)
+void GPS_localization::get_xy(double &x, double &y)
 {
     if (!ref_ready)
     {
@@ -87,26 +87,26 @@ void GPSLocalization::getXY(double &x, double &y)
         return;
     }
 
-    double lat = getLatitude();
-    double lon = getLongitude();
+    double lat = get_latitude();
+    double lon = get_longitude();
 
-    latLonToXY(ref_lat, ref_lon, lat, lon, x, y);
+    lat_lon_to_xy(ref_lat, ref_lon, lat, lon, x, y);
 }
 
-double GPSLocalization::degreesToRadians(double deg)
+double GPS_localization::degrees_to_radians(double deg)
 {
     return deg * M_PI / 180.0;
 }
 
-void GPSLocalization::latLonToXY(double latRef, double lonRef,
+void GPS_localization::lat_lon_to_xy(double latRef, double lonRef,
                                   double lat, double lon,
                                   double &x, double &y)
 {
     const double R = 6371000.0;
 
-    double dLat = degreesToRadians(lat - latRef);
-    double dLon = degreesToRadians(lon - lonRef);
-    double latRefRad = degreesToRadians(latRef);
+    double dLat = degrees_to_radians(lat - latRef);
+    double dLon = degrees_to_radians(lon - lonRef);
+    double latRefRad = degrees_to_radians(latRef);
 
     x = dLon * R * cos(latRefRad);
     y = dLat * R;

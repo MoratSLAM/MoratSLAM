@@ -4,32 +4,32 @@
 #include <TinyGPSPlus.h>
 #include <HardwareSerial.h>
 
-class GPSLocalization
+class GPS_localization
 {
-public:
-    GPSLocalization(HardwareSerial &serialPort, uint32_t baudRate = 115200,
-                     int rxPin = 16, int txPin = 17);
+    public:
+        GPS_localization(HardwareSerial &serialPort, uint32_t baudRate = 115200,
+                        int rxPin = 16, int txPin = 17);
 
-    void update();
-    
-    void setReference(int sat_threshold, double max_variation, int n_init_samples);
+        void update();
+        
+        void set_reference(int sat_threshold, double max_variation, int n_init_samples);
 
-    double getLatitude();
-    double getLongitude();
-    int getSatellites();
+        double get_latitude();
+        double get_longitude();
+        int get_satellites();
 
-    void getXY(double &x, double &y);
+        void get_xy(double &x, double &y);
 
-private:
-    HardwareSerial &gpsSerial;
-    TinyGPSPlus gps;
+    private:
+        HardwareSerial &gpsSerial;
+        TinyGPSPlus gps;
 
-    double ref_lat;
-    double ref_lon;
-    bool ref_ready;
+        double ref_lat;
+        double ref_lon;
+        bool ref_ready;
 
-    double degreesToRadians(double deg);
-    void latLonToXY(double latRef, double lonRef, double lat, double lon, double &x, double &y);
+        double degrees_to_radians(double deg);
+        void lat_lon_to_xy(double latRef, double lonRef, double lat, double lon, double &x, double &y);
 };
 
 #endif
