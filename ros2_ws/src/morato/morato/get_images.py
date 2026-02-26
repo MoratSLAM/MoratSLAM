@@ -2,6 +2,7 @@ import cv2
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
+from rclpy.clock import Clock, ClockType
 
 class GetImages(Node):
     def __init__(self):
