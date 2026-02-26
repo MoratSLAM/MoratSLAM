@@ -4,6 +4,7 @@
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
+#include <rmw_microros/rmw_microros.h>
 
 #include <nav_msgs/msg/odometry.h>
 #include <geometry_msgs/msg/point.h>
@@ -79,6 +80,9 @@ void setup()
   // Initialize micro-ROS support structure
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
+  // Sync time with ROS agent
+  rmw_uros_sync_session(1000);
+
   // Create the node
   RCCHECK(rclc_node_init_default(&node, "esp32_sensors_node", "", &support));
 
@@ -143,9 +147,9 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   const SensorData& s = SensorManager::get_datas();
 
   // Timestamp
-  uint32_t ms = millis();
-  odom_msg.header.stamp.sec = ms / 1000;
-  odom_msg.header.stamp.nanosec = (ms % 1000) * 1000000;
+  int64_t now = rmw_uros_epoch_nanos();
+  odom_msg.header.stamp.sec = now / 1000000000ULL;
+  odom_msg.header.stamp.nanosec = now % 1000000000ULL;
 
   // Position
   odom_msg.pose.pose.position.x = 0.0;
