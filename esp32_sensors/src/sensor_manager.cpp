@@ -27,7 +27,7 @@ void SensorManager::init()
 {
     encoder.begin();
     imu.begin();
-    gps.set_reference(10, 0.00001, 50);
+    gps.set_reference(3, 0.00001, 50);
 }
 
 void SensorManager::update()

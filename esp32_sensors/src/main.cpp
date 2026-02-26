@@ -80,11 +80,14 @@ void setup()
   // Initialize micro-ROS support structure
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
-  // Sync time with ROS agent
-  rmw_uros_sync_session(1000);
-
   // Create the node
   RCCHECK(rclc_node_init_default(&node, "esp32_sensors_node", "", &support));
+
+  // Sync time with ROS agent
+  while (rmw_uros_sync_session(1000) != RMW_RET_OK)
+  {
+    delay(500);
+  }
 
   // Initialize messages
   nav_msgs__msg__Odometry__init(&odom_msg);
@@ -120,6 +123,14 @@ void loop()
 
   // Update sensor data
   SensorManager::update();
+
+  // Sync time with ROS agent every 5 seconds
+  static unsigned long last_sync = 0;
+  if (millis() - last_sync > 5000)
+  {
+    rmw_uros_sync_session(100);
+    last_sync = millis();
+  }
 
   // Process micro-ROS executor (timers, subscriptions, etc.)
   RCSOFTCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10)));
