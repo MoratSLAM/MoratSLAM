@@ -71,7 +71,7 @@ bool MPU6050_Morato::update()
     // display gravity vector
     mpu.dmpGetGravity(&gravity, &q);
 
-    // display Yaw/Pitch/Roll angles in degrees
+    // display Yaw/Pitch/Roll angles in radians
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
     // display gyro and accel values
@@ -85,7 +85,7 @@ bool MPU6050_Morato::update()
 
 float MPU6050_Morato::get_yaw_deg()
 {
-    return ypr[0] * 180.0f / M_PI;
+    return ypr[0]; //* 180.0f / M_PI;
 }
 
 void MPU6050_Morato::get_yaw_pitch_roll(float ypr_out[3])

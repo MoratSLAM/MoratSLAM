@@ -7,14 +7,13 @@
 #include <rmw_microros/rmw_microros.h>
 
 #include <nav_msgs/msg/odometry.h>
-#include <geometry_msgs/msg/point.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 #include <rosidl_runtime_c/string_functions.h>
 
 #include <OTA_ESP32.h>
 #include <WiFi.h>
 
-#include "sensor_manager.h"
+#include "sensors_manager.h"
 
 // WiFi
 /*
@@ -25,6 +24,12 @@ const char* WIFI_PASSWORD = "mor@to123";
 const char* DEVICE_HOSTNAME = "ESP32_SENSORS";
 const char* OTA_PASSWORD    = "mor@to123";
 */
+
+
+
+static double last_yaw = 0.0;
+static int64_t last_time = 0;
+
 
 // ROS OBJECTS
 rcl_node_t node;
@@ -39,8 +44,8 @@ nav_msgs__msg__Odometry odom_msg;
 rcl_publisher_t gps_pub;
 sensor_msgs__msg__NavSatFix gps_msg;
 
-rcl_publisher_t point_pub;
-geometry_msgs__msg__Point point_msg;
+// SENSORS OBJECT
+SensorManager sensors;
 
 // MACROS
 #define RCCHECK(fn)  { rcl_ret_t rc = fn; if(rc != RCL_RET_OK){ error_loop(); }}
@@ -65,11 +70,8 @@ void setup()
   // OTA
   //OtaManager::begin(WIFI_SSID, WIFI_PASSWORD, DEVICE_HOSTNAME, OTA_PASSWORD);
 
-  // Sensors
-  SensorManager::init();
-
-  // micro-ROS transport
-  set_microros_serial_transports(Serial);
+  // Sensors initialization
+  sensors.init(0, 0.00001, 50);
 
   // Configure micro-ROS transport over serial
   set_microros_serial_transports(Serial);
@@ -83,6 +85,7 @@ void setup()
   // Create the node
   RCCHECK(rclc_node_init_default(&node, "esp32_sensors_node", "", &support));
 
+  
   // Sync time with ROS agent
   while (rmw_uros_sync_session(1000) != RMW_RET_OK)
   {
@@ -92,7 +95,6 @@ void setup()
   // Initialize messages
   nav_msgs__msg__Odometry__init(&odom_msg);
   sensor_msgs__msg__NavSatFix__init(&gps_msg);
-  geometry_msgs__msg__Point__init(&point_msg);
 
   // Set fixed frame names (done once)
   rosidl_runtime_c__String__assign(&odom_msg.header.frame_id, "odom");
@@ -103,10 +105,8 @@ void setup()
 
   RCCHECK(rclc_publisher_init_default(&gps_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), "gps"));
 
-  RCCHECK(rclc_publisher_init_default(&point_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Point), "point"));
-
   // Create timer callback (10 ms)
-  RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(10), timer_callback));
+  RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(200), timer_callback));
 
   // Configure executor
   RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
@@ -119,10 +119,7 @@ void setup()
 void loop()
 {
   // OTA handler must be called continuously.
-  OtaManager::handle();
-
-  // Update sensor data
-  SensorManager::update();
+  // OtaManager::handle();
 
   // Sync time with ROS agent every 5 seconds
   static unsigned long last_sync = 0;
@@ -152,10 +149,15 @@ void error_loop()
 // TIMER CALLBACK
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
+  // Update sensor data
+  sensors.update();
+
+  //unsigned long start_micros = micros();  // Tempo inicial em microssegundos
+
   RCLC_UNUSED(last_call_time);
   if (timer == NULL) return;
 
-  const SensorData& s = SensorManager::get_datas();
+  const SensorData& s = sensors.getData();
 
   // Timestamp
   int64_t now = rmw_uros_epoch_nanos();
@@ -178,10 +180,29 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   odom_msg.twist.twist.linear.y = 0.0;
   odom_msg.twist.twist.linear.z = 0.0;
 
+  int64_t gyro_dt = rmw_uros_epoch_nanos();
+
+  double dt = (gyro_dt - last_time) / 1e9;
+
+  double gyro_z = (s.yaw - last_yaw) / dt;
+
+  last_yaw = s.yaw;
+  last_time = gyro_dt;
+
   // Angular velocity
   odom_msg.twist.twist.angular.x = s.gyro_x;
   odom_msg.twist.twist.angular.y = s.gyro_y;
-  odom_msg.twist.twist.angular.z = s.gyro_z;
+  odom_msg.twist.twist.angular.z = gyro_z * (-1.0);
+
+/*
+  unsigned long end_micros = micros();  // Tempo final em microssegundos
+
+  double exec_time_ms = (end_micros - start_micros) / 1000.0;  // Tempo de execução em ms
+
+  // Atualizar linear.y com o tempo de execução
+  odom_msg.twist.twist.linear.y = exec_time_ms;
+
+*/
 
   // Publish the odometry message
   RCSOFTCHECK(rcl_publish(&odom_pub, &odom_msg, NULL));
@@ -194,12 +215,4 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 
   // Publish GPS message
   RCSOFTCHECK(rcl_publish(&gps_pub, &gps_msg, NULL));
-
-  // LOCAL XY
-  point_msg.x = (float)s.gps_x;
-  point_msg.y = (float)s.gps_y;
-  point_msg.z = (float)s.satellites;
-
-  // Publish local XY point
-  RCSOFTCHECK(rcl_publish(&point_pub, &point_msg, NULL));
 }

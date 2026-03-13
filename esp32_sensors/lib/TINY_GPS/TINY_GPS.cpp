@@ -42,9 +42,17 @@ void GPS_localization::set_reference(int sat_threshold, double max_variation, in
     while (!ref_ready)
     {
         update();
-
         if (!gps.location.isUpdated())
-            continue;
+            ref_lat =  0;
+            ref_lon = 0;
+            for (int i = 0; i < 10; i++)
+            {
+                digitalWrite(2, LOW);
+                delay(50);
+                digitalWrite(2, HIGH);
+                delay(800);
+            }
+            break;
 
         double lat = gps.location.lat();
         double lon = gps.location.lng();
@@ -53,7 +61,7 @@ void GPS_localization::set_reference(int sat_threshold, double max_variation, in
         bool stable = (sats >= sat_threshold) &&
                       (abs(lat - prev_lat) < max_variation) &&
                       (abs(lon - prev_lon) < max_variation);
-
+        
         if (stable)
         {
             lat_sum += lat;

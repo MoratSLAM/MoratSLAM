@@ -28,12 +28,7 @@ void EncoderMorato::begin()
 
 void IRAM_ATTR EncoderMorato::encoder_isr()
 {
-    int b_state = digitalRead(instance->pin_b);
-
-    if (b_state == HIGH)
-        instance->encoder_count++;
-    else
-        instance->encoder_count--;
+    instance->encoder_count++;
 }
 
 float EncoderMorato::compute_velocity()
@@ -44,8 +39,13 @@ float EncoderMorato::compute_velocity()
     if (dt <= 0.0f)
         return 0.0f;
 
-    int32_t delta = encoder_count - encoder_count_prev;
-    encoder_count_prev = encoder_count;
+    noInterrupts();
+    int32_t count = encoder_count;
+    interrupts();
+
+    int32_t delta = count - encoder_count_prev;
+    
+    encoder_count_prev = count;
     last_time_ms = now_ms;
 
     return ((delta / pulses_per_rev) * wheel_perimeter_cm) / dt;
@@ -53,7 +53,10 @@ float EncoderMorato::compute_velocity()
 
 int32_t EncoderMorato::get_count()
 {
-    return encoder_count;
+    noInterrupts();
+    int32_t count = encoder_count;
+    interrupts();
+    return count;
 }
 
 float EncoderMorato::get_distance_cm()
