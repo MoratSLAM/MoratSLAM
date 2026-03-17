@@ -14,16 +14,18 @@ Servo SrvGear;   // marcha
 const int DIR_LEFT  = 41;
 const int DIR_RIGHT = 141;
 const int DIR_CENTER = 92;
-int dirOffset = 0;     // Ajuste fino da direção (positivo=>direita / negativo=>esquerda)
-const int DIR_OFFSET_STEP = 1;   // tamanho do passo por clique
+int dirOffset = 13;     // Ajuste fino da direção (positivo=>direita / negativo=>esquerda)
+const int DIR_OFFSET_STEP = 1;   // passo de aumento
 
 // ESC
-const int ESC_MIN = 65;
-const int ESC_MAX = 80;
+const int ESC_PPM = 66;
 const int ESC_STOP = 20;
+int escSpeed = ESC_PPM;      // velocidade atual
+const int ESC_STEP = 1;      // passo de aumento
+uint16_t lastDpad = 0;       // guarda estado anterior do DPad
 
 // Freio
-const int BRK_ON  = 41;
+const int BRK_ON  = 45;
 const int BRK_OFF = 141;
 
 // Marcha
@@ -34,36 +36,29 @@ const int GEAR_FORWARD = 200;
 // ======================================================
 // VARIÁVEIS DE ESTADO
 // ======================================================
-bool brakeEnabled = false;
 bool gearForward = true;
 
-bool lastL1 = false;
 bool lastR1 = false;
-
-bool accelEnabled = false;
-bool lastX = false;
 
 // Ponteiro para o controle
 GamepadPtr myGamepad;
 
-int escValue = 0;
 
 // ======================================================
 // BLUEPAD — CALLBACKS
 // ======================================================
 void onConnectedGamepad(GamepadPtr gp) {
-    myGamepad = gp;
-    Serial.println("Controle conectado!");
-    myGamepad->setColorLED(0, 255, 0);
-    
+  myGamepad = gp;
+  myGamepad->setColorLED(0, 255, 0);
 }
 
 void onDisconnectedGamepad(GamepadPtr gp) {
-    if (myGamepad == gp) {
-        myGamepad = nullptr;
-    }
-    Serial.println("Controle desconectado");
-    EscMtr.write(ESC_STOP);
+  EscMtr.write(ESC_STOP);
+  delay(200);
+  SrvBrk.write(BRK_ON);
+  if (myGamepad == gp) {
+      myGamepad = nullptr;
+  }
 }
 
 
@@ -118,61 +113,33 @@ void loop() {
         SrvDir.write(dirValue);
 
         // ================================
-        // 2) ACELERAÇÃO — BOTÃO X (toggle)
+        // 2) ACELERAÇÃO — BOTÃO X
         // ================================
         bool xPressed = myGamepad->a(); 
 
-        if (xPressed && !lastX) {
-            accelEnabled = !accelEnabled;
-
-            if (accelEnabled) {
-                //
-                // ---- ACELERAR ----
-                //
-                SrvBrk.write(BRK_OFF);
-                delay(200);
-                EscMtr.write(ESC_MIN);
-                myGamepad->setColorLED(0, 0, 255);
-            }
-            else {
-                //
-                // ---- PARAR ----
-                //
-                EscMtr.write(ESC_STOP);
-                delay(150);
-                SrvBrk.write(BRK_ON);
-                myGamepad->setColorLED(255, 0, 0);
-                delay(200);
-            }
+        if (xPressed) {
+            SrvBrk.write(BRK_OFF);
+            delay(200);
+            EscMtr.write(escSpeed);
+            myGamepad->setColorLED(0, 0, 255);
         }
-        lastX = xPressed;
 
-        // Segurança: se freio do L1 estiver ativo, motor sempre para
-        if (brakeEnabled) {
+
+        // ================================
+        // 3) FREIO — BOTÃO O
+        // ================================
+        bool oPressed = myGamepad->b();
+
+        if (oPressed) {
             EscMtr.write(ESC_STOP);
+            delay(100);
             SrvBrk.write(BRK_ON);
+            myGamepad->setColorLED(255, 0, 0);
+            myGamepad->playDualRumble(0, 250, 0x80, 0x40);
+            delay(500);
+            SrvBrk.write(BRK_OFF);
+            myGamepad->setColorLED(0, 255, 0);
         }
-
-        // ================================
-        // 3) FREIO — L1 toggle
-        // ================================
-        bool l1Pressed = myGamepad->l1();
-
-        if (l1Pressed && !lastL1) {
-            brakeEnabled = !brakeEnabled;
-            if (brakeEnabled) {
-                EscMtr.write(ESC_STOP);
-                delay(100);
-                SrvBrk.write(BRK_ON);
-                myGamepad->setColorLED(255, 0, 0);
-                myGamepad->playDualRumble(0, 250, 0x80, 0x40);
-            }
-            else {
-                SrvBrk.write(BRK_OFF);
-                myGamepad->setColorLED(0, 255, 0);
-            }
-        }
-        lastL1 = l1Pressed;
 
         // ================================
         // 4) MARCHA — R1 toggle
@@ -198,27 +165,51 @@ void loop() {
  
         if (dpad == 0x08) {
             dirOffset -= DIR_OFFSET_STEP;
-            myGamepad->setColorLED(255, 150, 0);     // LED laranja ao ajustar
-            delay(200);  // evita repetir muito rápido
+            myGamepad->setColorLED(255, 150, 0); 
+            delay(200);
             myGamepad->setColorLED(0, 255, 0);
             myGamepad->playDualRumble(0, 250, 0x80,0x40);
         }
 
         if (dpad == 0x04) {
             dirOffset += DIR_OFFSET_STEP;
-            myGamepad->setColorLED(0, 150, 255);     // LED azul-claro ao ajustar
-            delay(200); // evita repetir muito rápido
+            myGamepad->setColorLED(0, 150, 255); 
+            delay(200); 
             myGamepad->setColorLED(0, 255, 0);
             myGamepad->playDualRumble(0, 250, 0x80,0x40);
         }
 
-        if (dpad == 0x02) {
-            dirOffset = 0;
-            myGamepad->setColorLED(255, 0, 0);     // LED azul-claro ao ajustar
-            delay(200); // evita repetir muito rápido
+        // ================================
+        // CONTROLE DE VELOCIDADE
+        // ================================
+
+        // DPad UP -> aumenta velocidade
+        if (dpad == 0x01 && lastDpad != 0x01) {
+            escSpeed += ESC_STEP;
+            escSpeed = constrain(escSpeed, ESC_PPM, 70);
+
+            Serial.printf("Velocidade: %d\n", escSpeed);
+
+            myGamepad->setColorLED(255, 150, 0); 
+            delay(200);
             myGamepad->setColorLED(0, 255, 0);
             myGamepad->playDualRumble(0, 250, 0x80,0x40);
         }
+
+        // DPad DOWN -> volta para velocidade mínima
+        if (dpad == 0x02 && lastDpad != 0x02) {
+            escSpeed = ESC_PPM;
+
+            Serial.println("Velocidade resetada");
+
+            myGamepad->setColorLED(255, 150, 0); 
+            delay(200);  
+            myGamepad->setColorLED(0, 255, 0);
+            myGamepad->playDualRumble(0, 250, 0x80,0x40);
+        }
+
+        lastDpad = dpad;
+
         /*
         // ===========================================================
         // DEBUG PRINT — PRINTA TUDO NO FIM DO LOOP
