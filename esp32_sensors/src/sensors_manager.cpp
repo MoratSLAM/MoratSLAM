@@ -30,7 +30,7 @@ void SensorManager::update()
 
     imu.update();
 
-    data.yaw = imu.get_yaw_deg();
+    data.yaw = imu.get_yaw_rad();
 
     Quaternion q = imu.get_quaternion();
     data.qx = q.x;

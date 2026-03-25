@@ -10,7 +10,7 @@ struct SensorData
 
     float qx, qy, qz, qw;
     float gyro_x, gyro_y, gyro_z;
-    float yaw;
+    float yaw; // Radianos
 
     double latitude;
     double longitude;

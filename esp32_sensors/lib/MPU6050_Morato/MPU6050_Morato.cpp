@@ -83,7 +83,7 @@ bool MPU6050_Morato::update()
     return true;
 }
 
-float MPU6050_Morato::get_yaw_deg()
+float MPU6050_Morato::get_yaw_rad()
 {
     return ypr[0]; //* 180.0f / M_PI;
 }

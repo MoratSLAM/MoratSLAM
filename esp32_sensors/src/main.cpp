@@ -165,7 +165,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   odom_msg.header.stamp.nanosec = now % 1000000000ULL;
 
   // Position
-  odom_msg.pose.pose.position.x = 0.0;
+  odom_msg.pose.pose.position.x = s.yaw;  // Usando yaw como posição x para / Yaw em radianos
   odom_msg.pose.pose.position.y = 0.0;
   odom_msg.pose.pose.position.z = 0.0;
 

@@ -70,8 +70,8 @@ void setup() {
 
     // Servos
     SrvDir.attach(19);
-    EscMtr.attach(16);
-    SrvBrk.attach(17);
+    EscMtr.attach(32); //16 era o antigo que foi trocado por conta da comunicação serial
+    SrvBrk.attach(17); //17 era o antigo que foi trocado por conta da comunicação serial
     SrvGear.attach(18);
 
     // Valores iniciais
