@@ -14,7 +14,7 @@
         <param name="use_sim_time" value="true" />
         <param name="topic_root" value="irat_red" />
         <param name="media_path" value="$(find-pkg-share ratslam)/media" />
-        <param name="image_file" value="irat_sm.tga" />
+        <param name="image_file" value="morato.tga" />
         <param from="$(find-pkg-share ratslam)/config/config_morato.yaml" />
     </node>
 
@@ -27,7 +27,7 @@
         <param name="use_sim_time" value="true" />
         <param name="topic_root" value="irat_red" />
         <param name="media_path" value="$(find-pkg-share ratslam)/media" />
-        <param name="image_file" value="irat_sm.tga" />
+        <param name="image_file" value="morato.tga" />
         <param from="$(find-pkg-share ratslam)/config/config_morato.yaml" />
     </node>
 
@@ -40,7 +40,7 @@
         <param name="use_sim_time" value="true" />
         <param name="topic_root" value="irat_red" />
         <param name="media_path" value="$(find-pkg-share ratslam)/media" />
-        <param name="image_file" value="irat_sm.tga" />
+        <param name="image_file" value="morato.tga" />
         <param from="$(find-pkg-share ratslam)/config/config_morato.yaml" />
     </node>      
 </launch>
