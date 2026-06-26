@@ -35,9 +35,9 @@ void loop() {
         Serial.print(" | Pitch: "); Serial.print(pitch_deg);
         Serial.print(" | Roll: ");  Serial.println(roll_deg);
 
-        // ===== Yaw direto em graus =====
-        float yaw = imu.get_yaw_deg();
-        Serial.print("Yaw (deg): ");
+        // ===== Yaw direto em radianos =====
+        float yaw = imu.get_yaw_rad();
+        Serial.print("Yaw (rad): ");
         Serial.println(yaw);
 
         // ===== Quaternion =====

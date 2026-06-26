@@ -165,7 +165,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   odom_msg.header.stamp.nanosec = now % 1000000000ULL;
 
   // Position
-  odom_msg.pose.pose.position.x = s.yaw;  // Usando yaw como posição x para / Yaw em radianos
+  odom_msg.pose.pose.position.x = 0.0;
   odom_msg.pose.pose.position.y = 0.0;
   odom_msg.pose.pose.position.z = 0.0;
 
@@ -211,7 +211,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   gps_msg.header.stamp = odom_msg.header.stamp;
   gps_msg.latitude  = (float)s.latitude;
   gps_msg.longitude = (float)s.longitude;
-  gps_msg.altitude  = 0.0;
+  gps_msg.altitude  = s.satellites;
 
   // Publish GPS message
   RCSOFTCHECK(rcl_publish(&gps_pub, &gps_msg, NULL));

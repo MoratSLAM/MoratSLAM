@@ -26,7 +26,6 @@ setup(
         'console_scripts': [
             "data_to_csv = morato.data_to_csv:main",
             "get_images = morato.get_images:main"
-
         ],
     },
 )

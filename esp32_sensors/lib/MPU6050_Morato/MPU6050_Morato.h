@@ -13,7 +13,7 @@ class MPU6050_Morato
         // Public methods
         bool begin();
         bool update();
-        float get_yaw_deg();
+        float get_yaw_rad();
         void get_yaw_pitch_roll(float ypr_out[3]);
         Quaternion get_quaternion();
         VectorInt16 get_gyro();

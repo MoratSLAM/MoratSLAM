@@ -950,7 +950,7 @@ void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
     pcvt = &visual_templates[vt];
 
     // this prevents energy injected in recently created vt's
-    if (vt < (visual_templates.size() - 300)) { // Morato 200 / Original 10
+    if (vt < (visual_templates.size() - 300)) { // Morato 300 / Original 10
       if (vt != current_vt) {
       } else {
         pcvt->decay += VT_ACTIVE_DECAY;
