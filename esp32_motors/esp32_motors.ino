@@ -1,3 +1,9 @@
+#include <Bluepad32.h>
+
+#include <micro_ros_arduino.h>
+
+#include <micro_ros_arduino.h>
+
 #include <Arduino.h>
 #include <ESP32Servo.h>
 #include <Bluepad32.h>
@@ -21,6 +27,7 @@ const int DIR_OFFSET_STEP = 1;   // passo de aumento
 const int ESC_PPM = 66;
 const int ESC_STOP = 20;
 int escSpeed = ESC_PPM;      // velocidade atual
+bool escSpeedChanged = false;// flag para mudança de velocidade
 const int ESC_STEP = 1;      // passo de aumento
 uint16_t lastDpad = 0;       // guarda estado anterior do DPad
 
@@ -70,9 +77,13 @@ void setup() {
 
     // Servos
     SrvDir.attach(19);
-    EscMtr.attach(32); //16 era o antigo que foi trocado por conta da comunicação serial
-    SrvBrk.attach(17); //17 era o antigo que foi trocado por conta da comunicação serial
+    EscMtr.attach(32);
+    SrvBrk.attach(33);
     SrvGear.attach(18);
+
+    EscMtr.write(ESC_PPM);
+    delay(200);
+    EscMtr.write(ESC_STOP);
 
     // Valores iniciais
     SrvDir.write(DIR_CENTER);
@@ -83,7 +94,7 @@ void setup() {
     BP32.setup(&onConnectedGamepad, &onDisconnectedGamepad);
 
     // Para esquecer o controle caso necessário (Caso esteja dando problema, parear novamente resolve)
-    //BP32.forgetBluetoothKeys();
+    // BP32.forgetBluetoothKeys();
 
     // Deixar o controle virtual desativado (O controle virtual é o touchpad do dualshock 4)
     BP32.enableVirtualDevice(false);
@@ -117,7 +128,8 @@ void loop() {
         // ================================
         bool xPressed = myGamepad->a(); 
 
-        if (xPressed) {
+        if (xPressed || escSpeedChanged) {
+            escSpeedChanged = false;
             SrvBrk.write(BRK_OFF);
             delay(200);
             EscMtr.write(escSpeed);
@@ -194,6 +206,7 @@ void loop() {
             delay(200);
             myGamepad->setColorLED(0, 255, 0);
             myGamepad->playDualRumble(0, 250, 0x80,0x40);
+            escSpeedChanged = true;
         }
 
         // DPad DOWN -> volta para velocidade mínima
@@ -206,10 +219,17 @@ void loop() {
             delay(200);  
             myGamepad->setColorLED(0, 255, 0);
             myGamepad->playDualRumble(0, 250, 0x80,0x40);
+            escSpeedChanged = true;
         }
 
         lastDpad = dpad;
 
+        bool start = myGamepad->miscStart();
+
+        if (start){
+            BP32.forgetBluetoothKeys();
+        } 
+        
         /*
         // ===========================================================
         // DEBUG PRINT — PRINTA TUDO NO FIM DO LOOP
