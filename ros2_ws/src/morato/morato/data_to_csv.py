@@ -1,107 +1,200 @@
 #!/usr/bin/env python3
-import rclpy
-from rclpy.node import Node
 
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import NavSatFix
-
-import time
 import csv
 import os
 
-class DataToCsv(Node):
+import rclpy
+from rclpy.node import Node
+
+from sensor_msgs.msg import NavSatFix
+from topological_msgs.msg import TopologicalMap
+
+
+class DataToCSV(Node):
 
     def __init__(self):
-        super().__init__('data_to_csv')
+        super().__init__("data_to_csv")
 
-        # ---------------- ODOM SUB ----------------
-        self.subscription_odom = self.create_subscription(Odometry, '/irat_red/odom', self.odom_callback, 10)
+        # =====================================================
+        # Output directory
+        # =====================================================
 
-        # ---------------- GPS SUB ----------------
-        self.subscription_gps = self.create_subscription(NavSatFix, '/gps', self.gps_callback, 10)
+        self.output_dir = os.path.expanduser("/home/iarley_santos/Documents/tcc/topological_logs")
+        os.makedirs(self.output_dir, exist_ok=True)
 
-        self.start_time = time.time()
-
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-
-        # ---------------- ODOM CSV ----------------
-        self.odom_csv_filename = f"odom_velocity_{timestamp}.csv"
-        self.odom_csv_file = open(self.odom_csv_filename, mode='w', newline='')
-        self.odom_csv_writer = csv.writer(self.odom_csv_file)
-
-        self.odom_csv_writer.writerow([
-            "time",
-            "lin_x", "lin_y", "lin_z",
-            "ang_x", "ang_y", "ang_z"
-        ])
-
-        # ---------------- GPS CSV ----------------
-        self.gps_csv_filename = f"gps_latlon_{timestamp}.csv"
-        self.gps_csv_file = open(self.gps_csv_filename, mode='w', newline='')
-        self.gps_csv_writer = csv.writer(self.gps_csv_file)
-
-        self.gps_csv_writer.writerow([
-            "time",
-            "latitude",
-            "longitude",
-            "altitude"
-        ])
-
-        self.get_logger().info(
-            f"Odom CSV: {os.path.abspath(self.odom_csv_filename)}"
-        )
-        self.get_logger().info(
-            f"GPS CSV:  {os.path.abspath(self.gps_csv_filename)}"
+        self.nodes_file = os.path.join(
+            self.output_dir,
+            "topological_nodes.csv"
         )
 
-    # ---------------- ODOM CALLBACK ----------------
-    def odom_callback(self, msg: Odometry):
-        t = time.time() - self.start_time
+        self.edges_file = os.path.join(
+            self.output_dir,
+            "topological_edges.csv"
+        )
 
-        self.odom_csv_writer.writerow([
-            t,
-            msg.twist.twist.linear.x,
-            msg.twist.twist.linear.y,
-            msg.twist.twist.linear.z,
-            msg.twist.twist.angular.x,
-            msg.twist.twist.angular.y,
-            msg.twist.twist.angular.z
-        ])
+        self.gps_file = os.path.join(
+            self.output_dir,
+            "gps_log.csv"
+        )
 
-    # ---------------- GPS CALLBACK ----------------
+        # =====================================================
+        # Create GPS CSV
+        # =====================================================
+
+        with open(self.gps_file, "w", newline="") as f:
+
+            writer = csv.writer(f)
+
+            writer.writerow([
+                "timestamp",
+                "latitude",
+                "longitude",
+                "altitude"
+            ])
+
+        # =====================================================
+        # Create empty Nodes CSV
+        # =====================================================
+
+        with open(self.nodes_file, "w", newline="") as f:
+
+            writer = csv.writer(f)
+
+            writer.writerow([
+                "node_id",
+                "x",
+                "y"
+            ])
+
+        # =====================================================
+        # Create empty Edges CSV
+        # =====================================================
+
+        with open(self.edges_file, "w", newline="") as f:
+
+            writer = csv.writer(f)
+
+            writer.writerow([
+                "source_id",
+                "destination_id"
+            ])
+
+        # =====================================================
+        # Subscribers
+        # =====================================================
+
+        self.map_sub = self.create_subscription(
+            TopologicalMap,
+            "/irat_red/ExperienceMap/Map",
+            self.map_callback,
+            10
+        )
+
+        self.gps_sub = self.create_subscription(
+            NavSatFix,
+            "/gps",
+            self.gps_callback,
+            10
+        )
+
+        self.get_logger().info("DataToCSV node started.")
+
+    # ==========================================================
+    # GPS CALLBACK
+    # ==========================================================
+
     def gps_callback(self, msg: NavSatFix):
-        t = time.time() - self.start_time
 
-        # Opcional: só grava se o GPS for válido
-        if msg.status.status < 0:
-            return
+        timestamp = self.get_clock().now().nanoseconds / 1e9
 
-        self.gps_csv_writer.writerow([
-            t,
-            msg.latitude,
-            msg.longitude,
-            msg.altitude
-        ])
+        with open(self.gps_file, "a", newline="") as f:
 
-    def destroy_node(self):
-        self.odom_csv_file.close()
-        self.gps_csv_file.close()
-        self.get_logger().info("Arquivos CSV fechados com sucesso.")
-        super().destroy_node()
+            writer = csv.writer(f)
 
+            writer.writerow([
+                timestamp,
+                msg.latitude,
+                msg.longitude,
+                msg.altitude
+            ])
+
+    # ==========================================================
+    # TOPOLOGICAL MAP CALLBACK
+    # ==========================================================
+
+    def map_callback(self, msg: TopologicalMap):
+
+        self.get_logger().info(
+            f"Received map ({msg.node_count} nodes, {msg.edge_count} edges)"
+        )
+
+        # ------------------------------------------------------
+        # Save Nodes
+        # ------------------------------------------------------
+
+        with open(self.nodes_file, "w", newline="") as f:
+
+            writer = csv.writer(f)
+
+            writer.writerow([
+                "node_id",
+                "x",
+                "y"
+            ])
+
+            for node in msg.node:
+
+                writer.writerow([
+                    node.id,
+                    node.pose.position.x,
+                    node.pose.position.y
+                ])
+
+        # ------------------------------------------------------
+        # Save Edges
+        # ------------------------------------------------------
+
+        with open(self.edges_file, "w", newline="") as f:
+
+            writer = csv.writer(f)
+
+            writer.writerow([
+                "source_id",
+                "destination_id"
+            ])
+
+            for edge in msg.edge:
+
+                writer.writerow([
+                    edge.source_id,
+                    edge.destination_id
+                ])
+
+        self.get_logger().info(
+            f"Saved {msg.node_count} nodes and {msg.edge_count} edges."
+        )
+
+
+# ==============================================================
+# Main
+# ==============================================================
 
 def main(args=None):
+
     rclpy.init(args=args)
 
-    node = DataToCsv()
+    node = DataToCSV()
 
     try:
         rclpy.spin(node)
+
     except KeyboardInterrupt:
-        pass
+        node.get_logger().info("Stopping DataToCSV...")
 
-    node.destroy_node()
-    rclpy.shutdown()
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

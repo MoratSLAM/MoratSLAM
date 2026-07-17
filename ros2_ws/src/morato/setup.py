@@ -25,7 +25,9 @@ setup(
     entry_points={
         'console_scripts': [
             "data_to_csv = morato.data_to_csv:main",
-            "get_images = morato.get_images:main"
+            "get_images = morato.get_images:main",
+            "experience_map_viewer = morato.experience_map_viewer:main",
+            "ratslam_visualizer = morato.ratslam_visualizer:main"
         ],
     },
 )
