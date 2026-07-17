@@ -48,7 +48,9 @@ float EncoderMorato::compute_velocity()
     encoder_count_prev = count;
     last_time_ms = now_ms;
 
-    return ((delta / pulses_per_rev) * wheel_perimeter_cm) / dt;
+    float wheel_perimeter_m = wheel_perimeter_cm / 100.0f;
+
+    return (((float)delta / pulses_per_rev) * wheel_perimeter_m) / dt;
 }
 
 int32_t EncoderMorato::get_count()

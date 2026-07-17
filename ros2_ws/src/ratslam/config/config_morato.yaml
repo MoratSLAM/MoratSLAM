@@ -26,6 +26,6 @@ ratslam_pose_cells:
 ratslam_experience_map:
   ros__parameters:
     exp_loops: 80
-    exp_initial_em_deg: 270.0
+    exp_initial_em_deg: 221.96
     # draw
-    enable: false
+    enable: true
