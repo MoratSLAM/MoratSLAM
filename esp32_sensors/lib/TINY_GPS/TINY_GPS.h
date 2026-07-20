@@ -27,6 +27,14 @@ class GPS_localization
         double ref_lat;
         double ref_lon;
         bool ref_ready;
+        double last_valid_lat = 0.0;
+        double last_valid_lon = 0.0;
+        bool first_reading_lat = true;
+        bool first_reading_lon = true;
+
+        // Limite máximo de variação permitido por leitura (em graus)
+        // 0.001 graus é aproximadamente 111 metros. Ajuste se necessário.
+        const double MAX_DELTA = 0.005;
 
         double degrees_to_radians(double deg);
         void lat_lon_to_xy(double latRef, double lonRef, double lat, double lon, double &x, double &y);

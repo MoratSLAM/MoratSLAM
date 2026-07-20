@@ -18,12 +18,43 @@ void GPS_localization::update()
 
 double GPS_localization::get_latitude()
 {
-    return gps.location.isValid() ? gps.location.lat() : 0.0;
+    // Check if the GPS location is valid before accessing it
+    if(gps.location.isValid())
+    {
+        double current_lat = gps.location.lat();
+
+        // If this is the first reading, set the last valid latitude to the current reading
+        if(first_reading_lat && current_lat != 0.0)
+        {
+            last_valid_lat = current_lat;
+            first_reading_lat = false;
+        }
+        // If the current reading is valid and within the acceptable range, update the last valid latitude
+        else if(fabs(current_lat - last_valid_lat) < MAX_DELTA && current_lat != 0.0)
+        {
+            last_valid_lat = current_lat;
+        }
+    }
+    return last_valid_lat;
 }
 
 double GPS_localization::get_longitude()
 {
-    return gps.location.isValid() ? gps.location.lng() : 0.0;
+    if(gps.location.isValid())
+    {
+        double current_lon = gps.location.lng();
+
+        if(first_reading_lon && current_lon != 0.0)
+        {
+            last_valid_lon = current_lon;
+            first_reading_lon = false;
+        }
+        else if(fabs(current_lon - last_valid_lon) < MAX_DELTA && current_lon != 0.0)
+        {
+            last_valid_lon = current_lon;
+        }
+    }
+    return last_valid_lon;
 }
 
 int GPS_localization::get_satellites()
@@ -43,6 +74,7 @@ void GPS_localization::set_reference(int sat_threshold, double max_variation, in
     {
         update();
         if (!gps.location.isUpdated())
+        {
             ref_lat =  0;
             ref_lon = 0;
             for (int i = 0; i < 10; i++)
@@ -53,6 +85,7 @@ void GPS_localization::set_reference(int sat_threshold, double max_variation, in
                 delay(800);
             }
             break;
+        }
 
         double lat = gps.location.lat();
         double lon = gps.location.lng();
