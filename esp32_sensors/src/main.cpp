@@ -101,9 +101,9 @@ void setup()
   rosidl_runtime_c__String__assign(&odom_msg.child_frame_id, "base_link");
 
   // Create publishers
-  RCCHECK(rclc_publisher_init_default(&odom_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "irat_red/odom"));
+  RCCHECK(rclc_publisher_init_default(&odom_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "morato/odom"));
 
-  RCCHECK(rclc_publisher_init_default(&gps_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), "gps"));
+  RCCHECK(rclc_publisher_init_default(&gps_pub, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, NavSatFix), "morato/gps"));
 
   // Create timer callback (10 ms)
   RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(200), timer_callback));
