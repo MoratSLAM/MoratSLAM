@@ -10,6 +10,7 @@ static const float pulses_per_rev = 355.0f;
 // GPS
 static HardwareSerial GPS_Serial(2);
 
+// Constructor for the SensorManager class, initializing the encoder, GPS, and IMU
 SensorManager::SensorManager() :
     encoder(ENCODER_A, ENCODER_B, pulses_per_rev, wheel_perimeter_cm),
     gps(GPS_Serial, 115200, 16, 17),
@@ -17,6 +18,7 @@ SensorManager::SensorManager() :
 {
 }
 
+// Initialize the sensors and set the GPS reference location
 void SensorManager::init(int sat_threshold, double max_variation, int n_init_samples)
 {
     encoder.begin();
@@ -24,6 +26,7 @@ void SensorManager::init(int sat_threshold, double max_variation, int n_init_sam
     gps.set_reference(sat_threshold, max_variation, n_init_samples);
 }
 
+// Update the sensor readings and store them in the SensorData structure
 void SensorManager::update()
 {
     data.velocity = encoder.compute_velocity();
@@ -52,7 +55,8 @@ void SensorManager::update()
     data.satellites = gps.get_satellites();
 }
 
-const SensorData& SensorManager::getData() const
+// Get the current sensor data
+const SensorData& SensorManager::get_data() const
 {
     return data;
 }

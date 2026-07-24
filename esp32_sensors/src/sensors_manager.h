@@ -4,13 +4,14 @@
 #include <TINY_GPS.h>
 #include <ENCODER_Morato.h>
 
+// Data structure to hold sensor readings
 struct SensorData
 {
     float velocity;
 
     float qx, qy, qz, qw;
     float gyro_x, gyro_y, gyro_z;
-    float yaw; // Radianos
+    float yaw;
 
     double latitude;
     double longitude;
@@ -28,7 +29,7 @@ class SensorManager
         void init(int sat_threshold, double max_variation, int n_init_samples);
         void update();
 
-        const SensorData& getData() const;
+        const SensorData& get_data() const;
 
     private:
         EncoderMorato encoder;

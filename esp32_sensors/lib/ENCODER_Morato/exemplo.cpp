@@ -1,16 +1,16 @@
 #include <Arduino.h>
 #include "ENCODER_Morato.h"
 
+// Pin definitions for the encoder
 #define ENCODER_A 32
 #define ENCODER_B 33
 
+// Constants for the encoder
 const float wheel_perimeter_cm = 45.2389342f;
 const float pulses_per_rev = 355.0f;
 
-EncoderMorato encoder(ENCODER_A,
-                      ENCODER_B,
-                      pulses_per_rev,
-                      wheel_perimeter_cm);
+// Create an instance of the EncoderMorato class
+EncoderMorato encoder(ENCODER_A, ENCODER_B, pulses_per_rev, wheel_perimeter_cm);
 
 void setup()
 {
@@ -25,9 +25,9 @@ void setup()
 
 void loop()
 {
-    // ===== LEITURA DO ENCODER =====
+    // Compute the velocity in cm/s
     float vel = encoder.compute_velocity();
-    Serial.print("Velocidade [cm/s]: ");
+    Serial.print("Vel [cm/s]: ");
     Serial.print(vel, 2);
 
     delay(100);

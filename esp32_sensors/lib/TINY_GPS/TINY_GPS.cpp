@@ -1,6 +1,7 @@
 #include "TINY_GPS.h"
 #include <math.h>
 
+// Constructor for the GPS_localization class
 GPS_localization::GPS_localization(HardwareSerial &serialPort, uint32_t baudRate,
                                    int rxPin, int txPin)
     : gpsSerial(serialPort), ref_lat(0.0), ref_lon(0.0), ref_ready(false)
@@ -8,6 +9,7 @@ GPS_localization::GPS_localization(HardwareSerial &serialPort, uint32_t baudRate
     gpsSerial.begin(baudRate, SERIAL_8N1, rxPin, txPin);
 }
 
+// Update the GPS data by reading from the serial port and encoding it
 void GPS_localization::update()
 {
     while (gpsSerial.available() > 0)
@@ -16,6 +18,7 @@ void GPS_localization::update()
     }
 }
 
+// Get the current latitude, ensuring that it is valid and within the acceptable range
 double GPS_localization::get_latitude()
 {
     // Check if the GPS location is valid before accessing it
@@ -38,6 +41,7 @@ double GPS_localization::get_latitude()
     return last_valid_lat;
 }
 
+// Get the current longitude, ensuring that it is valid and within the acceptable range
 double GPS_localization::get_longitude()
 {
     if(gps.location.isValid())
@@ -57,11 +61,13 @@ double GPS_localization::get_longitude()
     return last_valid_lon;
 }
 
+// Get the number of satellites currently in view
 int GPS_localization::get_satellites()
 {
     return gps.satellites.value();
 }
 
+// Set the reference location based on a series of GPS readings, ensuring stability and accuracy
 void GPS_localization::set_reference(int sat_threshold, double max_variation, int n_init_samples)
 {
     double lat_sum = 0.0;
@@ -120,6 +126,7 @@ void GPS_localization::set_reference(int sat_threshold, double max_variation, in
     }
 }
 
+// Get the Cartesian coordinates (x, y) relative to the reference location
 void GPS_localization::get_xy(double &x, double &y)
 {
     if (!ref_ready)
@@ -134,14 +141,14 @@ void GPS_localization::get_xy(double &x, double &y)
     lat_lon_to_xy(ref_lat, ref_lon, lat, lon, x, y);
 }
 
+// Convert degrees to radians
 double GPS_localization::degrees_to_radians(double deg)
 {
     return deg * M_PI / 180.0;
 }
 
-void GPS_localization::lat_lon_to_xy(double latRef, double lonRef,
-                                  double lat, double lon,
-                                  double &x, double &y)
+// Convert latitude and longitude to Cartesian coordinates (x, y) relative to a reference point
+void GPS_localization::lat_lon_to_xy(double latRef, double lonRef, double lat, double lon, double &x, double &y)
 {
     const double R = 6371000.0;
 

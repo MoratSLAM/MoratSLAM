@@ -13,8 +13,10 @@ public:
     // Call periodically (e.g. inside timer callback)
     float compute_velocity();
 
+    // Get the distance traveled in centimeters
     float get_distance_cm();
 
+    // Get the current encoder count
     int32_t get_count();
 
 private:

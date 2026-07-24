@@ -1,47 +1,26 @@
 #include <Arduino.h>
-
+// Micro-ROS libs
 #include <micro_ros_platformio.h>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
-
+// ROS messages
 #include <nav_msgs/msg/odometry.h>
 #include <sensor_msgs/msg/nav_sat_fix.h>
 #include <rosidl_runtime_c/string_functions.h>
-
-#include <OTA_ESP32.h>
-#include <WiFi.h>
-
+// Sensors
 #include "sensors_manager.h"
 
-// WiFi
-/*
-const char* WIFI_SSID     = "morato";
-const char* WIFI_PASSWORD = "mor@to123";
-
-// OTA
-const char* DEVICE_HOSTNAME = "ESP32_SENSORS";
-const char* OTA_PASSWORD    = "mor@to123";
-*/
-
-
-
-static double last_yaw = 0.0;
-static int64_t last_time = 0;
-
-
 // ROS OBJECTS
-rcl_node_t node;
-rclc_support_t support;
-rcl_allocator_t allocator;
-rclc_executor_t executor;
-rcl_timer_t timer;
-
-rcl_publisher_t odom_pub;
-nav_msgs__msg__Odometry odom_msg;
-
-rcl_publisher_t gps_pub;
+rcl_node_t                  node;
+rclc_support_t              support;
+rcl_allocator_t             allocator;
+rclc_executor_t             executor;
+rcl_timer_t                 timer;
+rcl_publisher_t             odom_pub;
+nav_msgs__msg__Odometry     odom_msg;
+rcl_publisher_t             gps_pub;
 sensor_msgs__msg__NavSatFix gps_msg;
 
 // SENSORS OBJECT
@@ -54,11 +33,11 @@ SensorManager sensors;
 // PROTOTYPES
 void error_loop();
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time);
+double calculate_gyro_z(double current_yaw);
 
 // SETUP
 void setup()
 {
-  //set_microros_wifi_transports((char *)ssid, (char *)password, agent_ip, agent_port);
   // LED for status
   pinMode(2, OUTPUT);
   digitalWrite(2, HIGH);
@@ -66,9 +45,6 @@ void setup()
   // Serial for debugging
   Serial.begin(115200);
   delay(2000);
-
-  // OTA
-  //OtaManager::begin(WIFI_SSID, WIFI_PASSWORD, DEVICE_HOSTNAME, OTA_PASSWORD);
 
   // Sensors initialization
   sensors.init(0, 0.00001, 50);
@@ -85,7 +61,6 @@ void setup()
   // Create the node
   RCCHECK(rclc_node_init_default(&node, "esp32_sensors_node", "", &support));
 
-  
   // Sync time with ROS agent
   while (rmw_uros_sync_session(1000) != RMW_RET_OK)
   {
@@ -112,15 +87,13 @@ void setup()
   RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
 
+  // Indicate that setup is complete
   digitalWrite(2, LOW);
 }
 
 // LOOP
 void loop()
 {
-  // OTA handler must be called continuously.
-  // OtaManager::handle();
-
   // Sync time with ROS agent every 5 seconds
   static unsigned long last_sync = 0;
   if (millis() - last_sync > 5000)
@@ -152,12 +125,10 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   // Update sensor data
   sensors.update();
 
-  //unsigned long start_micros = micros();  // Tempo inicial em microssegundos
-
   RCLC_UNUSED(last_call_time);
   if (timer == NULL) return;
 
-  const SensorData& s = sensors.getData();
+  const SensorData& s = sensors.get_data();
 
   // Timestamp
   int64_t now = rmw_uros_epoch_nanos();
@@ -180,29 +151,10 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   odom_msg.twist.twist.linear.y = 0.0;
   odom_msg.twist.twist.linear.z = 0.0;
 
-  int64_t gyro_dt = rmw_uros_epoch_nanos();
-
-  double dt = (gyro_dt - last_time) / 1e9;
-
-  double gyro_z = (s.yaw - last_yaw) / dt;
-
-  last_yaw = s.yaw;
-  last_time = gyro_dt;
-
   // Angular velocity
   odom_msg.twist.twist.angular.x = s.gyro_x;
   odom_msg.twist.twist.angular.y = s.gyro_y;
-  odom_msg.twist.twist.angular.z = gyro_z * (-1.0);
-
-/*
-  unsigned long end_micros = micros();  // Tempo final em microssegundos
-
-  double exec_time_ms = (end_micros - start_micros) / 1000.0;  // Tempo de execução em ms
-
-  // Atualizar linear.y com o tempo de execução
-  odom_msg.twist.twist.linear.y = exec_time_ms;
-
-*/
+  odom_msg.twist.twist.angular.z = calculate_gyro_z(s.yaw) * (-1.0);
 
   // Publish the odometry message
   RCSOFTCHECK(rcl_publish(&odom_pub, &odom_msg, NULL));
@@ -215,4 +167,35 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 
   // Publish GPS message
   RCSOFTCHECK(rcl_publish(&gps_pub, &gps_msg, NULL));
+}
+
+// Calculate the angular velocity around the Z-axis based on the current yaw angle
+double calculate_gyro_z(double current_yaw)
+{
+  static double last_yaw = 0.0;
+  static int64_t last_time = 0;
+
+  int64_t current_time = rmw_uros_epoch_nanos();
+
+  // If this is the first call, initialize last_time and last_yaw
+  if (last_time == 0)
+  {
+    last_time = current_time;
+    last_yaw = current_yaw;
+    return 0.0;
+  }
+
+  double dt = (current_time - last_time) / 1e9;
+  
+  double gyro_z = 0.0;
+  if (dt > 0.0)
+  {
+    gyro_z = (current_yaw - last_yaw) / dt;
+  }
+
+  // Update last_yaw and last_time for the next calculation
+  last_yaw = current_yaw;
+  last_time = current_time;
+
+  return gyro_z;
 }

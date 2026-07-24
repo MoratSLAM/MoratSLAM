@@ -21,7 +21,7 @@ def prepare_nodes(context: LaunchContext, *args, **kwargs):
     # 3. Common parameters for all nodes
     common_params = {
         'use_sim_time': False,
-        'topic_root': 'irat_red',
+        'topic_root': 'morato',
         'media_path': media_dir,
         'image_file': 'morato.tga'
     }

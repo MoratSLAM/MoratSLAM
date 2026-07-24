@@ -2,6 +2,7 @@
 
 EncoderMorato* EncoderMorato::instance = nullptr;
 
+// Constructor
 EncoderMorato::EncoderMorato(uint8_t pin_a, uint8_t pin_b, float pulses_per_rev, float wheel_perimeter_cm)
 {
     this->pin_a = pin_a;
@@ -16,6 +17,7 @@ EncoderMorato::EncoderMorato(uint8_t pin_a, uint8_t pin_b, float pulses_per_rev,
     instance = this;
 }
 
+// Initialize the encoder
 void EncoderMorato::begin()
 {
     pinMode(pin_a, INPUT_PULLUP);
@@ -26,11 +28,13 @@ void EncoderMorato::begin()
     last_time_ms = millis();
 }
 
+// Interrupt Service Routine (ISR) for the encoder
 void IRAM_ATTR EncoderMorato::encoder_isr()
 {
     instance->encoder_count++;
 }
 
+// Compute the velocity in cm/s
 float EncoderMorato::compute_velocity()
 {
     unsigned long now_ms = millis();
@@ -53,6 +57,7 @@ float EncoderMorato::compute_velocity()
     return (((float)delta / pulses_per_rev) * wheel_perimeter_m) / dt;
 }
 
+// Get the current encoder count
 int32_t EncoderMorato::get_count()
 {
     noInterrupts();
@@ -61,6 +66,7 @@ int32_t EncoderMorato::get_count()
     return count;
 }
 
+// Get the distance traveled in centimeters
 float EncoderMorato::get_distance_cm()
 {
     return (encoder_count / pulses_per_rev) * wheel_perimeter_cm;

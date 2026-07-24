@@ -7,7 +7,7 @@ from rclpy.clock import Clock, ClockType
 class GetImages(Node):
     def __init__(self):
         super().__init__("get_images")
-        self.pub = self.create_publisher(CompressedImage, "/irat_red/camera/image/compressed", 10)
+        self.pub = self.create_publisher(CompressedImage, "/morato/camera/image/compressed", 10)
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(0.03, self.callback) # 0.03 = 33FPS
 

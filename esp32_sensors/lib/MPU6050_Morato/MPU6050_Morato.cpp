@@ -4,12 +4,14 @@
     #include "Wire.h"
 #endif
 
+// Constructor
 MPU6050_Morato::MPU6050_Morato()
     : dmpReady(false),
       devStatus(0),
       packetSize(0) {
 }
 
+// Initialize the MPU6050 and DMP
 bool MPU6050_Morato::begin()
 {
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -40,12 +42,7 @@ bool MPU6050_Morato::begin()
     mpu.CalibrateAccel(6);
     mpu.CalibrateGyro(6);
 
-    //mpu.PrintActiveOffsets();
-    // turn on the DMP, now that it's ready
-    //Serial.println(F("Enabling DMP..."));
-
     mpu.setDMPEnabled(true);
-    //mpuIntStatus = mpu.getIntStatus();
 
     dmpReady = true;
 
@@ -57,6 +54,7 @@ bool MPU6050_Morato::begin()
     return true;
 }
 
+// Update the sensor readings from the MPU6050
 bool MPU6050_Morato::update()
 {
     // if programming failed, don't try to do anything
@@ -83,11 +81,13 @@ bool MPU6050_Morato::update()
     return true;
 }
 
+// Get the yaw angle in radians
 float MPU6050_Morato::get_yaw_rad()
 {
-    return ypr[0]; //* 180.0f / M_PI;
+    return ypr[0];
 }
 
+// Get the yaw, pitch, and roll angles in radians
 void MPU6050_Morato::get_yaw_pitch_roll(float ypr_out[3])
 {
     ypr_out[0] = ypr[0];
@@ -95,16 +95,19 @@ void MPU6050_Morato::get_yaw_pitch_roll(float ypr_out[3])
     ypr_out[2] = ypr[2];
 }
 
+// Get the quaternion representing the orientation
 Quaternion MPU6050_Morato::get_quaternion()
 {
     return q;
 }
 
+// Get the gravity vector
 VectorInt16 MPU6050_Morato::get_gyro()
 {
     return gyro;
 }
 
+// Get the acceleration vector
 VectorInt16 MPU6050_Morato::get_accel()
 {
     return accel;

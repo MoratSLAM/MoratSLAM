@@ -7,9 +7,10 @@
 class GPS_localization
 {
     public:
-        GPS_localization(HardwareSerial &serialPort, uint32_t baudRate = 115200,
-                        int rxPin = 16, int txPin = 17);
-
+        // Constructor for the GPS_localization class
+        GPS_localization(HardwareSerial &serialPort, uint32_t baudRate = 115200, int rxPin = 16, int txPin = 17);
+        
+        // Update the GPS data by reading from the serial port and encoding it                
         void update();
         
         void set_reference(int sat_threshold, double max_variation, int n_init_samples);
@@ -32,8 +33,8 @@ class GPS_localization
         bool first_reading_lat = true;
         bool first_reading_lon = true;
 
-        // Limite máximo de variação permitido por leitura (em graus)
-        // 0.001 graus é aproximadamente 111 metros. Ajuste se necessário.
+        // Limit maximum variation allowed per reading (in degrees)
+        // 0.001 degrees is approximately 111 meters
         const double MAX_DELTA = 0.005;
 
         double degrees_to_radians(double deg);
