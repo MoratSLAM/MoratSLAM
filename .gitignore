@@ -11,3 +11,8 @@ microros_ws/src/ros2.repos
 bags_out/
 fallback_bags_out/
 .vscode/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
