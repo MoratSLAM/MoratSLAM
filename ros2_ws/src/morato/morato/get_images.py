@@ -1,3 +1,4 @@
+import sys
 import cv2
 import rclpy
 from rclpy.node import Node
@@ -9,6 +10,13 @@ class GetImages(Node):
         super().__init__("get_images")
         self.pub = self.create_publisher(CompressedImage, "/morato/camera/image/compressed", 10)
         self.cap = cv2.VideoCapture(0)
+
+        if not self.cap.isOpened():
+            self.get_logger().error("FATAL ERROR: Failed to OPEN the camera! Check connection or permissions.")
+            sys.exit(1)
+            
+        self.get_logger().info("Camera opened successfully! Starting image capture...")
+
         self.timer = self.create_timer(0.03, self.callback) # 0.03 = 33FPS
 
     def callback(self):

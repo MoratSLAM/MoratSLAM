@@ -7,4 +7,7 @@ microros_ws/install/
 microros_ws/log/
 microros_ws/src/uros
 microros_ws/ros2.repos
+microros_ws/src/ros2.repos
+bags_out/
+fallback_bags_out/
 .vscode/

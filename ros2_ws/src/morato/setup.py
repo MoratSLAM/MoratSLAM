@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'morato'
@@ -10,8 +12,12 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
     ],
-    install_requires=['setuptools'],
+    install_requires=[
+        'setuptools',
+        'psutil',
+    ],
     zip_safe=True,
     maintainer='morato',
     maintainer_email='gestaogoytaborgs@gmail.com',
@@ -25,7 +31,8 @@ setup(
     entry_points={
         'console_scripts': [
             "get_images = morato.get_images:main",
-            "ratslam_visualizer = morato.ratslam_visualizer:main"
+            "ratslam_visualizer = morato.ratslam_visualizer:main",
+            "rasp_perf_monitor = morato.rasp_perf_monitor:main",
         ],
     },
 )

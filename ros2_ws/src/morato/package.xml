@@ -14,6 +14,8 @@
   <depend>visualization_msgs</depend>
   <depend>topological_msgs</depend>
   <depend>geometry_msgs</depend>
+  
+  <exec_depend>python3-psutil</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
