@@ -6,7 +6,7 @@ To run this launch file AND record a rosbag:
     ros2 launch morato system_launch.py rec_bag:=true
 
 To specify a different serial port and record:
-    ros2 launch morato system_launch.py rec_bag:=true serial_port:=/dev/ttyUSB1
+    ros2 launch morato system_launch.py rec_bag:=true serial_port:=/dev/ttyACM0
 '''
 
 import os
@@ -128,7 +128,7 @@ def generate_launch_description():
     # Declare launch arguments
     serial_port_arg = DeclareLaunchArgument(
         'serial_port',
-        default_value='/dev/ttyUSB0',
+        default_value='/dev/ttyACM0',
         description='Serial port for the micro-ROS agent'
     )
 
