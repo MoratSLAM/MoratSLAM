@@ -30,9 +30,10 @@ def get_bags_out_path():
             lines = f.readlines()
             # Read from bottom to top to catch the last added setup.bash source
             for line in reversed(lines):
-                match = re.search(r'source\s+(.*ros2_ws)/install/setup\.bash', line)
+                match = re.search(r'source\s+(.*ratslam/ros2_ws)/install/setup\.bash', line)
                 if match:
-                    ws_path = match.group(1)
+                    raw_path = match.group(1).strip()
+                    ws_path = os.path.expanduser(raw_path)
                     break
     except Exception as e:
         print(f"Warning: Could not read bashrc file: {e}")
