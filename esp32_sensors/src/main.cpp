@@ -59,7 +59,7 @@ void setup()
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
   // Create the node
-  RCCHECK(rclc_node_init_default(&node, "esp32_sensors_node", "", &support));
+  RCCHECK(rclc_node_init_default(&node, "sensors_acquisition_node", "", &support));
 
   // Sync time with ROS agent
   while (rmw_uros_sync_session(1000) != RMW_RET_OK)
