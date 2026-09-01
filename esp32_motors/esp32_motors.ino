@@ -35,9 +35,9 @@ const int GEAR_FORWARD = 200;
 
 // Pinos Auxiliares
 #define buzzer 21
-#define led_azul 25
+#define led_azul 26
 #define led_verde 27
-#define led_vermelho 26
+#define led_vermelho 25
 #define btn_pareamento 16  // Botão físico de pareamento
 
 // ======================================================
