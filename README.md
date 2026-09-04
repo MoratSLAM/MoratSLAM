@@ -109,7 +109,7 @@ Run the following commands from a sourced ROS 2 workspace. On the robot, use the
 The `ratslam` package is normally started through one of its launchers. For the Morato robot, use:
 
 ```bash
-ros2 launch ratslam morato.launch.py
+ros2 launch ratslam morato.launch
 ```
 
 ### Morato
