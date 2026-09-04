@@ -8,15 +8,15 @@ void setup()
     Serial.begin(115200);
     delay(1000);
 
-    Serial.println("Inicializando IMU...");
+    Serial.println("Initializing IMU...");
 
     if (!imu.begin()) 
     {
-        Serial.println("Erro ao iniciar MPU6050");
+        Serial.println("Error starting MPU6050");
         while (true);
     }
 
-    Serial.println("MPU6050 pronta!");
+    Serial.println("MPU6050 ready!");
 }
 
 void loop() {
@@ -35,7 +35,7 @@ void loop() {
         Serial.print(" | Pitch: "); Serial.print(pitch_deg);
         Serial.print(" | Roll: ");  Serial.println(roll_deg);
 
-        // ===== Yaw direto em radianos =====
+        // ===== Direct yaw in radians =====
         float yaw = imu.get_yaw_rad();
         Serial.print("Yaw (rad): ");
         Serial.println(yaw);
@@ -48,14 +48,14 @@ void loop() {
         Serial.print(q.y); Serial.print(", ");
         Serial.println(q.z);
 
-        // ===== Giroscópio =====
+        // ===== Gyroscope =====
         VectorInt16 gyro = imu.get_gyro();
         Serial.print("Gyro [raw]: ");
         Serial.print(gyro.x); Serial.print(", ");
         Serial.print(gyro.y); Serial.print(", ");
         Serial.println(gyro.z);
 
-        // ===== Acelerômetro =====
+        // ===== Accelerometer =====
         VectorInt16 accel = imu.get_accel();
         Serial.print("Accel [raw]: ");
         Serial.print(accel.x); Serial.print(", ");

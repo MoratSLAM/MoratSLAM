@@ -2,10 +2,11 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>morato</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="gestaogoytaborgs@gmail.com">morato</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="iarleyconceicaodossantos@gmail.com">Iarley Santos</maintainer>
+  <maintainer email="hevertonsilvadesouza@gmail.com">Heverton Souza</maintainer>
+  <license>GPL-3.0-only</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

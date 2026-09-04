@@ -1,17 +1,11 @@
 <launch>
-    <!-- 
-        ros2 bag play irat_aus_28112011/irat_aus_28112011.db3 
-        -\-rate 1.0   
-        -\-clock   
-        -\-start-paused 
-        -\-topics /irat_red/odom /irat_red/camera/image/compressed -->
     <node
         pkg="ratslam"
         exec="ratslam_lv"
         name="ratslam_view_template"
         output="screen"
         args="--ros-args --remap _image_transport:=compressed">
-        <param name="use_sim_time" value="true" />
+        <param name="use_sim_time" value="false" />
         <param name="topic_root" value="morato" />
         <param name="media_path" value="$(find-pkg-share ratslam)/media" />
         <param name="image_file" value="morato.tga" />
@@ -24,7 +18,7 @@
         name="ratslam_pose_cells"
         output="screen"
         args="--ros-args --remap _image_transport:=compressed">
-        <param name="use_sim_time" value="true" />
+        <param name="use_sim_time" value="false" />
         <param name="topic_root" value="morato" />
         <param name="media_path" value="$(find-pkg-share ratslam)/media" />
         <param name="image_file" value="morato.tga" />
@@ -37,7 +31,7 @@
         name="ratslam_experience_map"
         output="screen"
         args="--ros-args --remap _image_transport:=compressed">
-        <param name="use_sim_time" value="true" />
+        <param name="use_sim_time" value="false" />
         <param name="topic_root" value="morato" />
         <param name="media_path" value="$(find-pkg-share ratslam)/media" />
         <param name="image_file" value="morato.tga" />

@@ -19,8 +19,8 @@ setup(
         'psutil',
     ],
     zip_safe=True,
-    maintainer='morato',
-    maintainer_email='gestaogoytaborgs@gmail.com',
+    maintainer='Iarley Santos',
+    maintainer_email='iarleyconceicaodossantos@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     extras_require={

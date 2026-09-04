@@ -3,16 +3,16 @@ import math
 import rclpy
 from rclpy.node import Node
 
-# Mensagem do mapa customizado
+# Custom map message
 from topological_msgs.msg import TopologicalMap
 
-# Mensagens de visualização e geometria padrão do ROS2
+# Standard ROS2 visualization and geometry messages
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 from geometry_msgs.msg import Point, PoseStamped
 from sensor_msgs.msg import NavSatFix
 
-# Raio médio da Terra (WGS84), usado na projeção equiretangular local
+# Earth's mean radius (WGS84), used in the local equirectangular projection
 EARTH_RADIUS = 6378137.0
 
 
@@ -21,45 +21,45 @@ class RatSlamVisualizer(Node):
         super().__init__('ratslam_visualizer')
 
         # --- SUBSCRIBERS ---
-        # 1. Tópico do Mapa
+        # 1. Map topic
         self.map_sub = self.create_subscription(
             TopologicalMap,
-            '/irat_red/ExperienceMap/Map',
+            '/morato/ExperienceMap/Map',
             self.map_callback,
             10
         )
 
-        # 2. Tópico da Posição do Robô (RobotPose)
+        # 2. Robot position topic (RobotPose)
         self.pose_sub = self.create_subscription(
             PoseStamped,
-            '/irat_red/ExperienceMap/RobotPose',
+            '/morato/ExperienceMap/RobotPose',
             self.pose_callback,
             10
         )
 
-        # 3. Tópico do GPS (NavSatFix)
+        # 3. GPS topic (NavSatFix)
         self.gps_sub = self.create_subscription(
             NavSatFix,
-            '/gps',  # <-- ajuste aqui para o nome real do seu tópico de GPS
+            'morato/gps', 
             self.gps_callback,
             10
         )
 
         # --- PUBLISHERS ---
-        # 1. Publicador do Mapa (Nós e Arestas)
+        # 1. Map publisher (nodes and edges)
         self.map_pub = self.create_publisher(MarkerArray, '/ratslam/map_markers', 10)
 
-        # 2. Publicador do Robô
+        # 2. Robot publisher
         self.robot_pub = self.create_publisher(Marker, '/ratslam/robot_marker', 10)
 
-        # 3. Publicador do rastro de GPS
+        # 3. GPS trail publisher
         self.gps_pub = self.create_publisher(Marker, '/ratslam/gps_marker', 10)
 
-        # Estado interno para acumular o rastro do GPS
-        self.gps_origin = None      # (lat0, lon0) usado como referência local
-        self.gps_points = []        # lista de geometry_msgs/Point já convertidos
+        # Internal state used to accumulate the GPS trail
+        self.gps_origin = None      # (lat0, lon0) used as the local reference
+        self.gps_points = []        # list of already-converted geometry_msgs/Point values
 
-        self.get_logger().info('Visualizador iniciado! Lendo Map, RobotPose e GPS...')
+        self.get_logger().info('Visualizer started! Reading Map, RobotPose, and GPS...')
 
     def map_callback(self, msg):
         if msg.node_count == 0:
@@ -68,7 +68,7 @@ class RatSlamVisualizer(Node):
         marker_array = MarkerArray()
         frame = msg.header.frame_id if msg.header.frame_id else 'map'
 
-        # --- 1. MARCADOR DOS NÓS (Esferas Ciano) ---
+        # --- 1. NODE MARKER (Cyan spheres) ---
         nodes_marker = Marker()
         nodes_marker.header.frame_id = frame
         nodes_marker.header.stamp = self.get_clock().now().to_msg()
@@ -87,7 +87,7 @@ class RatSlamVisualizer(Node):
             node_positions[node.id] = node.pose.position
         marker_array.markers.append(nodes_marker)
 
-        # --- 2. MARCADOR DAS ARESTAS (Linhas Amarelas) ---
+        # --- 2. EDGE MARKER (Yellow lines) ---
         if msg.edge_count > 0:
             edges_marker = Marker()
             edges_marker.header.frame_id = frame
@@ -110,8 +110,8 @@ class RatSlamVisualizer(Node):
     def pose_callback(self, msg):
         robot_marker = Marker()
 
-        # 1. FORÇAR O FRAME_ID E O TEMPO
-        # Ignoramos o header da mensagem original e cravamos no 'map'
+        # 1. FORCE THE FRAME_ID AND TIMESTAMP
+        # Ignore the original message header and force the 'map' frame
         robot_marker.header.frame_id = 'map'
         robot_marker.header.stamp = self.get_clock().now().to_msg()
 
@@ -121,7 +121,6 @@ class RatSlamVisualizer(Node):
         robot_marker.type = Marker.SPHERE
         robot_marker.action = Marker.ADD
 
-        # Tamanho gigante que você configurou
         robot_marker.scale.x = 1.5
         robot_marker.scale.y = 0.7
         robot_marker.scale.z = 0.1
@@ -130,8 +129,8 @@ class RatSlamVisualizer(Node):
 
         robot_marker.pose = msg.pose
 
-        # 2. VALIDAR O QUATERNION (A Prova de Balas)
-        # Se a orientação vier zerada, forçamos um quaternion válido (sem rotação)
+        # 2. VALIDATE THE QUATERNION
+        # If the orientation is zeroed, force a valid quaternion (no rotation)
         if (robot_marker.pose.orientation.x == 0.0 and
                 robot_marker.pose.orientation.y == 0.0 and
                 robot_marker.pose.orientation.z == 0.0 and
@@ -142,15 +141,15 @@ class RatSlamVisualizer(Node):
         self.robot_pub.publish(robot_marker)
 
     def gps_callback(self, msg: NavSatFix):
-        # Ignora leituras sem fix válido
+        # Ignore readings without a valid fix
         if msg.status.status < 0:
             return
 
-        # Na primeira leitura válida, define a origem local (lat0, lon0)
+        # On the first valid reading, define the local origin (lat0, lon0)
         if self.gps_origin is None:
             self.gps_origin = (msg.latitude, msg.longitude)
             self.get_logger().info(
-                f'Origem do GPS definida em lat={msg.latitude:.7f}, lon={msg.longitude:.7f}'
+                f'GPS origin set at lat={msg.latitude:.7f}, lon={msg.longitude:.7f}'
             )
 
         x, y = self.latlon_to_local_xy(msg.latitude, msg.longitude)
@@ -164,10 +163,10 @@ class RatSlamVisualizer(Node):
         self.publish_gps_marker()
 
     def latlon_to_local_xy(self, lat, lon):
-        """Converte lat/lon para coordenadas locais (x=Leste, y=Norte) em metros,
-        usando uma projeção equiretangular simples referenciada à primeira posição
-        recebida. Suficiente para trajetórias curtas/médias; para áreas muito
-        grandes, considere usar UTM."""
+        """Convert lat/lon to local coordinates (x=East, y=North) in meters,
+        using a simple equirectangular projection referenced to the first received
+        position. Suitable for short/medium trajectories; for very large areas,
+        consider using UTM."""
         lat0, lon0 = self.gps_origin
 
         lat_rad = math.radians(lat)

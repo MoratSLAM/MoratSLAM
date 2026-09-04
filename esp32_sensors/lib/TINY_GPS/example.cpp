@@ -7,9 +7,9 @@ void setup()
 {
     Serial.begin(115200);
 
-    Serial.println("Definindo referência...");
+    Serial.println("Defining reference...");
     gpsLoc.set_reference(10, 0.00001, 50);
-    Serial.println("Referência OK");
+    Serial.println("Reference OK");
 }
 
 void loop()
